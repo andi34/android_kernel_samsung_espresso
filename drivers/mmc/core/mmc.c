@@ -410,6 +410,12 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
 	if (card->ext_csd.rev >= 6) {
 		card->ext_csd.feature_support |= MMC_DISCARD_FEATURE;
 
+		card->ext_csd.cache_size =
+			ext_csd[EXT_CSD_CACHE_SIZE + 0] << 0 |
+			ext_csd[EXT_CSD_CACHE_SIZE + 1] << 8 |
+			ext_csd[EXT_CSD_CACHE_SIZE + 2] << 16 |
+			ext_csd[EXT_CSD_CACHE_SIZE + 3] << 24;
+
 		card->ext_csd.max_packed_writes =
 			ext_csd[EXT_CSD_MAX_PACKED_WRITES];
 		card->ext_csd.max_packed_reads =
