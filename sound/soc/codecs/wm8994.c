@@ -3544,6 +3544,10 @@ static irqreturn_t wm1811_jackdet_irq(int irq, void *data)
 		snd_soc_update_bits(codec, WM8958_MICBIAS2,
 				    WM8958_MICB2_DISCH, 0);
 
+		/* Disable debounce while inserted */
+		snd_soc_update_bits(codec, WM1811_JACKDET_CTRL,
+				    WM1811_JACKDET_DB, 0);
+
 		/* If required for an external cap force MICBIAS on */
 		if (wm8994->pdata->jd_ext_cap) {
 			mutex_lock(&codec->mutex);
@@ -3577,6 +3581,10 @@ static irqreturn_t wm1811_jackdet_irq(int irq, void *data)
 		snd_soc_jack_report(wm8994->micdet[0].jack, 0,
 				    SND_JACK_MECHANICAL | SND_JACK_HEADSET |
 				    wm8994->btn_mask);
+
+		/* Enable debounce while removed */
+		snd_soc_update_bits(codec, WM1811_JACKDET_CTRL,
+				    WM1811_JACKDET_DB, WM1811_JACKDET_DB);
 
 		wm8994->mic_detecting = false;
 		wm8994->jack_mic = false;
