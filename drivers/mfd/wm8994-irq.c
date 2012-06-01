@@ -20,6 +20,7 @@
 #include <linux/interrupt.h>
 
 #include <linux/mfd/wm8994/core.h>
+#include <linux/mfd/wm8994/pdata.h>
 #include <linux/mfd/wm8994/registers.h>
 
 #include <linux/delay.h>
@@ -216,6 +217,8 @@ static irqreturn_t wm8994_irq_thread(int irq, void *data)
 	unsigned int i;
 	u16 status[WM8994_NUM_IRQ_REGS];
 	int ret;
+	unsigned long irqflags;
+	struct wm8994_pdata *pdata = wm8994->dev->platform_data;
 
 	ret = wm8994_bulk_read(wm8994, WM8994_INTERRUPT_STATUS_1,
 			       WM8994_NUM_IRQ_REGS, status);
@@ -292,9 +295,15 @@ int wm8994_irq_init(struct wm8994 *wm8994)
 #endif
 	}
 
+	/* select user or default irq flags */
+	irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+	if (pdata->irq_flags)
+		irqflags = pdata->irq_flags;
+
 	ret = request_threaded_irq(wm8994->irq, NULL, wm8994_irq_thread,
-				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
+				   irqflags,
 				   "wm8994", wm8994);
+
 	if (ret != 0) {
 		dev_err(wm8994->dev, "Failed to request IRQ %d: %d\n",
 			wm8994->irq, ret);
