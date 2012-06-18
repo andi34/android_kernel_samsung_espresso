@@ -233,6 +233,10 @@ struct mmc_host {
 #define MMC_CAP_MAX_CURRENT_800	(1 << 29)	/* Host max current limit is 800mA */
 #define MMC_CAP_CMD23		(1 << 30)	/* CMD23 supported. */
 #define MMC_CAP_HW_RESET	(1 << 31)	/* Hardware reset */
+#define MMC_CAP2_PACKED_RD	(1 << 3)	/* Allow packed read */
+#define MMC_CAP2_PACKED_WR	(1 << 4)	/* Allow packed write */
+#define MMC_CAP2_PACKED_CMD	(MMC_CAP2_PACKED_RD | \
+				 MMC_CAP2_PACKED_WR) /* Allow packed commands */
 
 	mmc_pm_flag_t		pm_caps;	/* supported pm features */
 
