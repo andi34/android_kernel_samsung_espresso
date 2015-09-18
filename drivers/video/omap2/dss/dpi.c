@@ -28,8 +28,6 @@
 #include <linux/errno.h>
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
-#include <plat/clock.h>
-#include <linux/clk.h>
 
 #include <video/omapdss.h>
 #include <plat/cpu.h>
@@ -39,11 +37,7 @@
 static struct {
 	struct regulator *vdds_dsi_reg;
 	struct platform_device *dsidev;
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	bool fb_skip;
-#endif
 } dpi;
-
 
 static struct platform_device *dpi_get_dsidev(enum omap_dss_clk_source clk)
 {
@@ -197,23 +191,23 @@ int omapdss_dpi_display_enable(struct omap_dss_device *dssdev)
 	r = dss_runtime_get();
 	if (r)
 		goto err_get_dss;
-	if (!dssdev->skip_init) {
-		r = dispc_runtime_get();
-		if (r)
-			goto err_get_dispc;
-	}
+
+	r = dispc_runtime_get();
+	if (r)
+		goto err_get_dispc;
+
 	dpi_basic_init(dssdev);
 
 	if (dpi_use_dsi_pll(dssdev)) {
 		r = dsi_runtime_get(dpi.dsidev);
 		if (r)
 			goto err_get_dsi;
-	if (!dssdev->skip_init) {
+
 		r = dsi_pll_init(dpi.dsidev, 0, 1);
 		if (r)
 			goto err_dsi_pll_init;
-		}
 	}
+
 	r = dpi_set_mode(dssdev);
 	if (r)
 		goto err_set_mode;
@@ -221,8 +215,7 @@ int omapdss_dpi_display_enable(struct omap_dss_device *dssdev)
 	mdelay(2);
 
 	dssdev->manager->enable(dssdev->manager);
-	if (dssdev->skip_init)
-		dssdev->skip_init = false;
+
 	return 0;
 
 err_set_mode:
@@ -247,8 +240,8 @@ EXPORT_SYMBOL(omapdss_dpi_display_enable);
 
 void omapdss_dpi_display_disable(struct omap_dss_device *dssdev)
 {
-
 	dssdev->manager->disable(dssdev->manager);
+
 	if (dpi_use_dsi_pll(dssdev)) {
 		dss_select_dispc_clk_source(OMAP_DSS_CLK_SRC_FCK);
 		dsi_pll_uninit(dpi.dsidev, true);
@@ -256,14 +249,7 @@ void omapdss_dpi_display_disable(struct omap_dss_device *dssdev)
 	}
 
 	dispc_runtime_put();
-
 	dss_runtime_put();
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	if (dpi.fb_skip) {
-		dssdev->dss_clks_disable();
-		dpi.fb_skip = false;
-	}
-#endif
 
 	if (cpu_is_omap34xx())
 		regulator_disable(dpi.vdds_dsi_reg);
@@ -371,10 +357,6 @@ int dpi_init_display(struct omap_dss_device *dssdev)
 			dssdev->clocks.dispc.dispc_fclk_src;
 		dpi.dsidev = dpi_get_dsidev(dispc_fclk_src);
 	}
-
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	dpi.fb_skip = dssdev->skip_init;
-#endif
 
 	return 0;
 }
