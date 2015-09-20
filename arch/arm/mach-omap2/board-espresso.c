@@ -226,9 +226,8 @@ static void __init espresso_init(void)
 	omap_hsi_allow_registration();
 #endif
 
-	if (sec_debug_get_level())
-		platform_add_devices(espresso_dbg_devices,
-				     ARRAY_SIZE(espresso_dbg_devices));
+	platform_add_devices(espresso_dbg_devices,
+			     ARRAY_SIZE(espresso_dbg_devices));
 
 	sec_common_init_post();
 }
@@ -264,12 +263,10 @@ static void __init espresso_reserve(void)
 	omap_ion_init();
 #endif
 	/* do the static reservations first */
-	if (sec_debug_get_level()) {
 #if defined(CONFIG_ANDROID_RAM_CONSOLE)
-		memblock_remove(ESPRESSO_RAMCONSOLE_START,
-				ESPRESSO_RAMCONSOLE_SIZE);
+	memblock_remove(ESPRESSO_RAMCONSOLE_START,
+			ESPRESSO_RAMCONSOLE_SIZE);
 #endif
-	}
 	memblock_remove(PHYS_ADDR_SMC_MEM, PHYS_ADDR_SMC_SIZE);
 	memblock_remove(PHYS_ADDR_DUCATI_MEM, PHYS_ADDR_DUCATI_SIZE);
 
