@@ -1,0 +1,54 @@
+From 7435bb7950ba8a3cbfa6d0c01e92588562533a3f Mon Sep 17 00:00:00 2001
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Date: Wed, 10 Aug 2011 18:46:28 +0900
+Subject: [PATCH] mmc: core: use defined R1_STATE_PRG macro for card status
+
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Signed-off-by: Kyungmin Park <kyungmin.park@samsung.com>
+Signed-off-by: Chris Ball <cjb@laptop.org>
+---
+ drivers/mmc/card/mmc_test.c | 2 +-
+ drivers/mmc/core/core.c     | 2 +-
+ drivers/mmc/core/mmc_ops.c  | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/mmc/card/mmc_test.c b/drivers/mmc/card/mmc_test.c
+index 742dc98..2bf229a 100644
+--- a/drivers/mmc/card/mmc_test.c
++++ b/drivers/mmc/card/mmc_test.c
+@@ -224,7 +224,7 @@ static void mmc_test_prepare_mrq(struct mmc_test_card *test,
+ static int mmc_test_busy(struct mmc_command *cmd)
+ {
+ 	return !(cmd->resp[0] & R1_READY_FOR_DATA) ||
+-		(R1_CURRENT_STATE(cmd->resp[0]) == 7);
++		(R1_CURRENT_STATE(cmd->resp[0]) == R1_STATE_PRG);
+ }
+ 
+ /*
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index 89bdeae..91a0a74 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -1502,7 +1502,7 @@ static int mmc_do_erase(struct mmc_card *card, unsigned int from,
+ 			goto out;
+ 		}
+ 	} while (!(cmd.resp[0] & R1_READY_FOR_DATA) ||
+-		 R1_CURRENT_STATE(cmd.resp[0]) == 7);
++		 R1_CURRENT_STATE(cmd.resp[0]) == R1_STATE_PRG);
+ out:
+ 	return err;
+ }
+diff --git a/drivers/mmc/core/mmc_ops.c b/drivers/mmc/core/mmc_ops.c
+index 845ce7c..770c3d0 100644
+--- a/drivers/mmc/core/mmc_ops.c
++++ b/drivers/mmc/core/mmc_ops.c
+@@ -407,7 +407,7 @@ int mmc_switch(struct mmc_card *card, u8 set, u8 index, u8 value,
+ 			break;
+ 		if (mmc_host_is_spi(card->host))
+ 			break;
+-	} while (R1_CURRENT_STATE(status) == 7);
++	} while (R1_CURRENT_STATE(status) == R1_STATE_PRG);
+ 
+ 	if (mmc_host_is_spi(card->host)) {
+ 		if (status & R1_SPI_ILLEGAL_COMMAND)
+
