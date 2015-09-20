@@ -786,7 +786,6 @@ static int omap_hsmmc_context_restore(struct omap_hsmmc_host *host)
 		hctl = SDVS18;
 		capa = VS18;
 	}
-
 	if (host->dma_type == ADMA_XFER)
 		hctl |= DMAS;
 
@@ -1115,7 +1114,6 @@ omap_hsmmc_errata_i761(struct omap_hsmmc_host *host, struct mmc_command *cmd)
 static void
 omap_hsmmc_cmd_done(struct omap_hsmmc_host *host, struct mmc_command *cmd)
 {
-
 	int err;
 	struct mmc_request *req;
 	req = host->mrq;
@@ -1506,27 +1504,26 @@ static irqreturn_t omap_hsmmc_cd_thread_handler(int irq, void *dev_id)
 		carddetect = -ENOSYS;
 	}
 
-	if (carddetect) {
+	if (carddetect){
 		dev_warn(mmc_dev(host->mmc), "New Card Inserted\n");
 		mmc_detect_change(host->mmc, (HZ * 200) / 1000);
-	} else {
-		/*
-		 * Because of OMAP4 Silicon errate (i705), we have to trun off
-		 * the PBIAS and VMMC for SD card as soon as we get card
-		 * disconnect interrupt. Because of this, we don't wait for
-		 * the higher layer structures to be dismantled before turining
-		 *  off power
-		 */
+	}
+	else{
+	/*
+	 * Because of OMAP4 Silicon errata (i705), we have to turn off the
+	 * PBIAS and VMMC for SD card as soon as we get card disconnect
+	 * interrupt. Because of this, we don't wait for all higher layer
+	 * structures to be dismantled before turning off power
+	 */
 		dev_warn(mmc_dev(host->mmc), "Card is Removed\n");
 		mmc_claim_host(host->mmc);
 		if ((MMC_POWER_OFF != host->power_mode) &&
 			(mmc_slot(host).set_power != NULL)) {
-			mmc_slot(host).set_power(host->dev, host->slot_id,
-								0, 0);
+			mmc_slot(host).set_power(host->dev, host->slot_id, 0, 0);
 			host->power_mode = MMC_POWER_OFF;
 		}
 		mmc_release_host(host->mmc);
-		mmc_detect_change(host->mmc, 0) ;
+		mmc_detect_change(host->mmc, 0);
 	}
 	return IRQ_HANDLED;
 }
@@ -1770,6 +1767,7 @@ omap_hsmmc_prepare_data(struct omap_hsmmc_host *host, struct mmc_request *req)
 {
 	int ret;
 	int numblks;
+
 	host->data = req->data;
 
 	if (req->data == NULL) {
@@ -1833,7 +1831,8 @@ static void omap_hsmmc_request(struct mmc_host *mmc, struct mmc_request *req)
 		host->reqs_blocked = 0;
 	WARN_ON(host->mrq != NULL);
 
-	/* Because of OMAP4 Silicon errate (i705), we have to turn off the
+	/*
+	 * Because of OMAP4 Silicon errata (i705), we have to turn off the
 	 * PBIAS and VMMC for SD card as soon as we get card disconnect
 	 * interrupt. Because of this, we don't wait for all higher layer
 	 * structures to be dismantled before turning off power. Because
@@ -1865,6 +1864,7 @@ static void omap_hsmmc_request(struct mmc_host *mmc, struct mmc_request *req)
 		mmc_request_done(mmc, req);
 		return;
 	}
+
 	omap_hsmmc_start_command(host, req->cmd, req->data, 0);
 }
 
@@ -2644,22 +2644,21 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	}
 
 	/* ADMA is not used if packed cmd is enabled*/
-		ctrlr_caps = OMAP_HSMMC_READ(host->base, CAPA);
-
-		if (ctrlr_caps & CAPA_ADMA_SUPPORT) {
-			/* FIXME: passing the device structure fails
-			 * due to unset conherency mask
-			 */
-			host->adma_table = dma_alloc_coherent(NULL,
-				ADMA_TABLE_SZ, &host->phy_adma_table, 0);
-			if (host->adma_table != NULL)
-				host->dma_type = ADMA_XFER;
-			}
-
+	ctrlr_caps = OMAP_HSMMC_READ(host->base, CAPA);
+	if (ctrlr_caps & CAPA_ADMA_SUPPORT) {
+		/* FIXME: passing the device structure fails
+		 * due to unset conherency mask
+		 */
+		host->adma_table = dma_alloc_coherent(NULL,
+			ADMA_TABLE_SZ, &host->phy_adma_table, 0);
+		if (host->adma_table != NULL)
+			host->dma_type = ADMA_XFER;
+	}
 	dev_dbg(mmc_dev(host->mmc), "DMA Mode=%d\n", host->dma_type);
 
 	/* Since we do only SG emulation, we can have as many segs
 	 * as we want. */
+
 	if (host->dma_type == ADMA_XFER) {
 		/* Worst case is when above block layer gives us 512 segments,
 		  * in which there are 511 single block entries, but one large
@@ -2670,13 +2669,13 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 		  * segments instead of DMA_TABLE_NUM_ENTRIES.
 		  */
 		mmc->max_segs = DMA_TABLE_NUM_ENTRIES/2;
-		mmc->max_blk_size = 512;	/* Blk Len at max can be 1024 */
+		mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
 		mmc->max_blk_count = ADMA_MAX_BLKS_PER_ROW *
 							DMA_TABLE_NUM_ENTRIES/2;
 		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
 	} else {
 		mmc->max_segs = DMA_TABLE_NUM_ENTRIES;
-		mmc->max_blk_size = 512;       /* Blk Len at max can be 1024 */
+		mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
 		if (mmc_slot(host).caps2 & MMC_CAP2_PACKED_CMD)
 			mmc->max_blk_count = 0x2000;
 		else
@@ -2921,7 +2920,6 @@ static int omap_hsmmc_suspend(struct device *dev)
 		}
 		if (mmc_slot(host).mmc_data.built_in)
 			host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
-
 		ret = mmc_suspend_host(host->mmc);
 		if (ret == 0) {
 			mmc_claim_host(host->mmc);
