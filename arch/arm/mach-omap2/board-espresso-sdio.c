@@ -26,9 +26,6 @@
 #include "omap_muxtbl.h"
 #include "hsmmc.h"
 
-/*for sysfs to update sd detect pin's status*/
-static struct device *sd_detection_cmd_dev;
-
 static struct omap2_hsmmc_info espresso_mmc_info[] = {
 	{
 		.mmc		= 2,
@@ -65,31 +62,6 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 	{}	/* Terminator */
 };
 
-
-static ssize_t sd_detection_cmd_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	int ret = -EIO;
-	u8 read_reg = 0;
-
-	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0, &read_reg,
-						TWL6030_MMCCTRL);
-
-	if (ret >= 0)
-		ret = read_reg & STS_MMC;
-
-	if (ret) {
-		pr_debug("SD : card inserted.\n");
-		return sprintf(buf, "Insert\n");
-	} else {
-		pr_debug("SD : card removed.\n");
-		return sprintf(buf, "Remove\n");
-	}
-
-}
-static DEVICE_ATTR(status, 0444, sd_detection_cmd_show, NULL);
-
-
 static int espresso_hsmmc_late_init(struct device *dev)
 {
 	int ret = 0;
@@ -106,19 +78,6 @@ static int espresso_hsmmc_late_init(struct device *dev)
 		pdata->slots[0].card_detect_irq =
 			TWL6030_IRQ_BASE + MMCDETECT_INTR_OFFSET;
 		pdata->slots[0].card_detect = twl6030_mmc_card_detect;
-
-		if (sd_detection_cmd_dev == NULL) {
-			/*create sysfs file for detect pin*/
-			sd_detection_cmd_dev = device_create(sec_class,
-				NULL, 0, NULL, "sdcard");
-			if (IS_ERR(sd_detection_cmd_dev))
-				pr_err("Failed to create sdcard sysfs dev\n");
-
-			if (device_create_file(sd_detection_cmd_dev,
-					&dev_attr_status) < 0)
-				pr_err("Fail to create sysfs sdcard/status sysfs file\n");
-			}
-
 	}
 
 	return ret;

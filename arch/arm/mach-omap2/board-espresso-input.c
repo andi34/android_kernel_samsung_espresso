@@ -220,51 +220,6 @@ void touch_i2c_to_gpio(bool to_gpios)
 	return;
 }
 
-ssize_t sec_key_pressed_show(struct device *dev,
-			     struct device_attribute *attr, char *buf)
-{
-	unsigned int key_press_status = 0;
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(espresso_gpio_keypad_keys_map_high); i++) {
-		if (unlikely
-		    (espresso_gpio_keypad_keys_map_high[i].gpio == -EINVAL))
-			continue;
-		key_press_status |=
-		    ((gpio_get_value(espresso_gpio_keypad_keys_map_high[i].gpio)
-		      << i));
-	}
-
-	for (i = 0; i < ARRAY_SIZE(espresso_gpio_keypad_keys_map_low); i++) {
-		if (unlikely
-		    (espresso_gpio_keypad_keys_map_low[i].gpio == -EINVAL))
-			continue;
-		key_press_status |=
-		    ((!gpio_get_value(espresso_gpio_keypad_keys_map_low[i].gpio)
-		      << (i + ARRAY_SIZE(espresso_gpio_keypad_keys_map_high))));
-	}
-
-	return sprintf(buf, "%u\n", key_press_status);
-}
-
-static DEVICE_ATTR(sec_key_pressed, S_IRUGO, sec_key_pressed_show, NULL);
-
-static int espresso_create_sec_key_dev(void)
-{
-	struct device *sec_key;
-	sec_key = device_create(sec_class, NULL, 0, NULL, "sec_key");
-	if (!sec_key) {
-		pr_err("Failed to create sysfs(sec_key)!\n");
-		return -ENOMEM;
-	}
-
-	if (device_create_file(sec_key, &dev_attr_sec_key_pressed) < 0)
-		pr_err("Failed to create device file(%s)!\n",
-		       dev_attr_sec_key_pressed.attr.name);
-
-	return 0;
-}
-
 static void __init espresso_gpio_keypad_gpio_init(void)
 {
 	int i;
@@ -355,8 +310,6 @@ void __init omap4_espresso_input_init(void)
 
 	i2c_register_board_info(3, espresso_i2c3_boardinfo,
 				ARRAY_SIZE(espresso_i2c3_boardinfo));
-
-	espresso_create_sec_key_dev();
 
 	platform_device_register(&espresso_gpio_keypad_device);
 }

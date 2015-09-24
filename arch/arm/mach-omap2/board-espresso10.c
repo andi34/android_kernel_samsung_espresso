@@ -51,9 +51,6 @@
 #include "omap4-sar-layout.h"
 #include "omap_muxtbl.h"
 
-#include "sec_common.h"
-#include "sec_debug.h"
-#include "sec_getlog.h"
 #include "sec_muxtbl.h"
 
 /* gpio to distinguish WiFi and USA-BBY
@@ -64,10 +61,14 @@
  */
 #define GPIO_HW_REV4		41
 
-#define ESPRESSO10_MEM_BANK_0_SIZE	0x20000000
-#define ESPRESSO10_MEM_BANK_0_ADDR	0x80000000
-#define ESPRESSO10_MEM_BANK_1_SIZE	0x20000000
-#define ESPRESSO10_MEM_BANK_1_ADDR	0xA0000000
+struct class *sec_class;
+EXPORT_SYMBOL(sec_class);
+
+#define OMAP_SW_BOOT_CFG_ADDR	0x4A326FF8
+#define REBOOT_FLAG_NORMAL		(1 << 0)
+#define REBOOT_FLAG_RECOVERY	(1 << 1)
+#define REBOOT_FLAG_POWER_OFF	(1 << 4)
+#define REBOOT_FLAG_DOWNLOAD	(1 << 5)
 
 #define ESPRESSO10_RAMCONSOLE_START	(PLAT_PHYS_OFFSET + SZ_512M)
 #define ESPRESSO10_RAMCONSOLE_SIZE	SZ_2M
@@ -159,38 +160,43 @@ unsigned int __init omap4_espresso10_get_board_type(void)
 	return board_type;
 }
 
-static void espresso10_power_off_charger(void)
-{
-	pr_err("Rebooting into bootloader for charger.\n");
-	arm_pm_restart('t', NULL);
-}
-
-static unsigned int gpio_ta_nconnected;
-
 static int espresso10_reboot_call(struct notifier_block *this,
 				unsigned long code, void *cmd)
 {
-	if (code == SYS_POWER_OFF && !gpio_get_value(gpio_ta_nconnected))
-		pm_power_off = espresso10_power_off_charger;
+	u32 flag = REBOOT_FLAG_NORMAL;
+	char *blcmd = "RESET";
 
-	return 0;
+	if (code == SYS_POWER_OFF) {
+		flag = REBOOT_FLAG_POWER_OFF;
+		blcmd = "POFF";
+	} else if (code == SYS_RESTART) {
+		if (cmd) {
+			if (!strcmp(cmd, "recovery"))
+				flag = REBOOT_FLAG_RECOVERY;
+			else if (!strcmp(cmd, "download"))
+				flag = REBOOT_FLAG_DOWNLOAD;
+		}
+	}
+
+	omap_writel(flag, OMAP_SW_BOOT_CFG_ADDR);
+	omap_writel(*(u32 *) blcmd, OMAP_SW_BOOT_CFG_ADDR - 0x04);
+
+	return NOTIFY_DONE;
 }
 
 static struct notifier_block espresso10_reboot_notifier = {
 	.notifier_call = espresso10_reboot_call,
 };
 
-static void __init omap4_espresso10_reboot_init(void)
+static void __init sec_common_init(void)
 {
-	gpio_ta_nconnected = omap_muxtbl_get_gpio_by_name("TA_nCONNECTED");
-
-	if (unlikely(gpio_ta_nconnected != -EINVAL))
-		register_reboot_notifier(&espresso10_reboot_notifier);
+	sec_class = class_create(THIS_MODULE, "sec");
+	if (IS_ERR(sec_class))
+		pr_err("Failed to create class (sec)!\n");
 }
 
 static void __init espresso10_init(void)
 {
-	sec_common_init_early();
 	omap4_espresso10_update_board_type();
 
 	omap4_espresso10_emif_init();
@@ -199,9 +205,10 @@ static void __init espresso10_init(void)
 		sec_muxtbl_init(SEC_MACHINE_ESPRESSO10_USA_BBY, system_rev);
 	sec_muxtbl_init(SEC_MACHINE_ESPRESSO10, system_rev);
 
-	/* initialize sec common infrastructures */
+	register_reboot_notifier(&espresso10_reboot_notifier);
+
+	/* initialize sec class */
 	sec_common_init();
-	sec_debug_init_crash_key(NULL);
 
 	/* initialize each drivers */
 	omap4_espresso10_serial_init();
@@ -221,7 +228,6 @@ static void __init espresso10_init(void)
 	omap4_espresso10_input_init();
 	omap4_espresso10_sensors_init();
 	omap4_espresso10_jack_init();
-	omap4_espresso10_reboot_init();
 	omap4_espresso10_none_modem_init();
 
 #ifdef CONFIG_OMAP_HSI_DEVICE
@@ -231,19 +237,12 @@ static void __init espresso10_init(void)
 
 	platform_add_devices(espresso10_dbg_devices,
 			     ARRAY_SIZE(espresso10_dbg_devices));
-
-	sec_common_init_post();
 }
 
 static void __init espresso10_map_io(void)
 {
 	omap2_set_globals_443x();
 	omap44xx_map_common_io();
-
-	sec_getlog_supply_meminfo(ESPRESSO10_MEM_BANK_0_SIZE,
-				  ESPRESSO10_MEM_BANK_0_ADDR,
-				  ESPRESSO10_MEM_BANK_1_SIZE,
-				  ESPRESSO10_MEM_BANK_1_ADDR);
 }
 
 static void omap4_espresso10_init_carveout_sizes(

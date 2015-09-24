@@ -74,9 +74,6 @@ int __init sec_muxtbl_init(unsigned int type, unsigned int rev)
 	static unsigned int init_done;
 
 	if (!init_done) {
-		if (omap_rev() == OMAP4430_REV_ES1_0)
-			package = OMAP_PACKAGE_CBL;
-
 		err = omap_muxtbl_init(package);
 		if (err)
 			return err;

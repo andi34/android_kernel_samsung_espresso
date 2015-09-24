@@ -111,7 +111,6 @@ struct omap4_otg {
 
 static struct omap4_otg espresso_otg_xceiv;
 
-static struct device *sec_switch_dev;
 static int init_switch_sel;
 
 enum {
@@ -178,50 +177,6 @@ static struct i2c_board_info __initdata espresso_i2c6_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("stmpe811", 0x82>>1),
 	},
-};
-
-static ssize_t espresso_usb_sel_show(struct device *dev,
-				   struct device_attribute *attr,
-				   char *buf);
-static ssize_t espresso_usb_sel_store(struct device *dev,
-				    struct device_attribute *attr,
-				    const char *buf, size_t size);
-
-static ssize_t espresso_uart_sel_show(struct device *dev,
-				   struct device_attribute *attr,
-				   char *buf);
-static ssize_t espresso_uart_sel_store(struct device *dev,
-				    struct device_attribute *attr,
-				    const char *buf, size_t size);
-
-static ssize_t espresso_usb_state_show(struct device *dev,
-				struct device_attribute *attr, char *buf);
-
-static ssize_t espresso_jig_on_show(struct device *dev,
-				   struct device_attribute *attr, char *buf);
-
-static ssize_t espresso_adc_show(struct device *dev,
-				struct device_attribute *attr, char *buf);
-
-static DEVICE_ATTR(usb_sel, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP,
-			espresso_usb_sel_show, espresso_usb_sel_store);
-static DEVICE_ATTR(uart_sel, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP,
-			espresso_uart_sel_show, espresso_uart_sel_store);
-static DEVICE_ATTR(usb_state, S_IRUGO, espresso_usb_state_show, NULL);
-static DEVICE_ATTR(jig_on, S_IRUSR | S_IWUSR, espresso_jig_on_show, NULL);
-static DEVICE_ATTR(adc, S_IRUSR | S_IRGRP, espresso_adc_show, NULL);
-
-static struct attribute *manual_switch_sel_attributes[] = {
-	&dev_attr_usb_sel.attr,
-	&dev_attr_uart_sel.attr,
-	&dev_attr_usb_state.attr,
-	&dev_attr_jig_on.attr,
-	&dev_attr_adc.attr,
-	NULL,
-};
-
-static const struct attribute_group manual_switch_sel_group = {
-	.attrs = manual_switch_sel_attributes,
 };
 
 static void espresso_set_dock_switch(int state)
@@ -412,16 +367,12 @@ static void espresso_cp_usb_attach(void)
 {
 	gpio_set_value(uart_sw_gpios[GPIO_USB_SEL1].gpio, 0);
 	gpio_set_value(uart_sw_gpios[GPIO_USB_SEL2].gpio, 0);
-
-	sysfs_notify(&sec_switch_dev->kobj, NULL, "usb_sel");
 }
 
 static void espresso_cp_usb_detach(void)
 {
 	gpio_set_value(uart_sw_gpios[GPIO_USB_SEL1].gpio, 1);
 	gpio_set_value(uart_sw_gpios[GPIO_USB_SEL2].gpio, 0);
-
-	sysfs_notify(&sec_switch_dev->kobj, NULL, "usb_sel");
 }
 
 static void espresso_ap_uart_actions(void)
@@ -682,180 +633,6 @@ struct platform_device espresso_device_connector = {
 		.platform_data = &espresso_con_pdata,
 	},
 };
-
-/* uart_switch, usb_sel */
-static ssize_t espresso_uart_sel_show(struct device *dev,
-						struct device_attribute *attr,
-						char *buf)
-{
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-	const char *mode;
-
-	switch (espresso_otg->uart_manual_mode) {
-	case ESPRESSO_MANUAL_UART_AP:
-		mode = "AP";
-		break;
-	case ESPRESSO_MANUAL_UART_MODEM:
-		mode = "CP";
-		break;
-	default:
-		mode = "NONE";
-	};
-
-	return sprintf(buf, "%s\n", mode);
-}
-
-static ssize_t espresso_uart_sel_store(struct device *dev,
-						struct device_attribute *attr,
-						const char *buf, size_t size)
-{
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-
-	mutex_lock(&espresso_otg->lock);
-
-	if (!strncasecmp(buf, "AP", 2)) {
-		espresso_otg->uart_manual_mode = ESPRESSO_MANUAL_UART_AP;
-
-		if (espresso_otg->current_device & BIT(P30_JIG))
-			espresso_ap_uart_actions();
-	} else if (!strncasecmp(buf, "CP", 2)) {
-		espresso_otg->uart_manual_mode = ESPRESSO_MANUAL_UART_MODEM;
-
-		if (espresso_otg->current_device & BIT(P30_JIG))
-			espresso_cp_uart_actions();
-	} else if (!strncasecmp(buf, "NONE", 4)) {
-		espresso_otg->uart_manual_mode = ESPRESSO_MANUAL_UART_NONE;
-
-		if (espresso_otg->current_device & BIT(P30_JIG))
-			espresso_ap_uart_actions();
-	}
-
-	mutex_unlock(&espresso_otg->lock);
-
-	return size;
-
-}
-
-static ssize_t espresso_usb_sel_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
-{
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-	const char *mode;
-
-	switch (espresso_otg->usb_manual_mode) {
-	case ESPRESSO_MANUAL_USB_AP:
-		mode = "PDA";
-		break;
-	case ESPRESSO_MANUAL_USB_MODEM:
-		mode = "MODEM";
-		break;
-	default:
-		mode = "NONE";
-	};
-
-	return sprintf(buf, "%s\n", mode);
-}
-
-static ssize_t espresso_usb_sel_store(struct device *dev,
-				    struct device_attribute *attr,
-				    const char *buf, size_t size)
-{
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-	int old_mode;
-
-	mutex_lock(&espresso_otg->lock);
-
-	old_mode = espresso_otg->usb_manual_mode;
-
-	if (!strncasecmp(buf, "PDA", 3)) {
-		espresso_otg->usb_manual_mode = ESPRESSO_MANUAL_USB_AP;
-
-		/* If we are transitioning from CP USB to AP USB then notify the
-		 * USB stack that is now attached.
-		 */
-		if ((espresso_otg->current_device & BIT(P30_USB)) &&
-				(old_mode != ESPRESSO_MANUAL_USB_AP)) {
-			espresso_cp_usb_detach();
-			espresso_ap_usb_attach(espresso_otg);
-		}
-	} else if (!strncasecmp(buf, "MODEM", 5)) {
-		espresso_otg->usb_manual_mode = ESPRESSO_MANUAL_USB_MODEM;
-
-		/* If we are transitioning from AP USB to CP USB then notify the
-		 * USB stack that is has been detached.
-		 */
-		if ((espresso_otg->current_device & BIT(P30_USB)) &&
-				(old_mode != ESPRESSO_MANUAL_USB_MODEM)) {
-			espresso_ap_usb_detach(espresso_otg);
-			espresso_cp_usb_attach();
-		}
-	} else if (!strncasecmp(buf, "NONE", 5)) {
-		espresso_otg->usb_manual_mode = ESPRESSO_MANUAL_USB_NONE;
-
-		/* If we are transitioning from CP USB to AP USB then notify the
-		 * USB stack that it is now attached.
-		 */
-		if ((espresso_otg->current_device & BIT(P30_USB)) &&
-				(old_mode != ESPRESSO_MANUAL_USB_MODEM)) {
-			espresso_cp_usb_detach();
-			espresso_ap_usb_attach(espresso_otg);
-		}
-	}
-
-	mutex_unlock(&espresso_otg->lock);
-
-	return size;
-}
-
-static ssize_t espresso_usb_state_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
-{
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-	const char *mode;
-
-	if (espresso_otg->current_device & BIT(P30_USB))
-		mode = "USB_STATE_CONFIGURED";
-	else
-		mode = "USB_STATE_NOT_CONFIGURED";
-
-	return sprintf(buf, "%s\n", mode);
-}
-
-static ssize_t espresso_jig_on_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
-{
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-	const char *mode;
-
-	if (espresso_otg->current_device & BIT(P30_JIG))
-		mode = "1";
-	else
-		mode = "0";
-
-	return sprintf(buf, "%s\n", mode);
-}
-
-/* Factory test application reads /sys/class/sec/switch/adc.
-   If key_string_on value is 0x1C, the application enables key-strings.
-   If key_string_on value is 0, the application disables key-strings.
-   This is Samsung standard.
- */
-static ssize_t espresso_adc_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	s16 adc_val;
-	u8 key_string_on;
-
-	adc_val = espresso_get_accessory_adc();
-	pr_info("accessory_id adc value = %d\n", adc_val);
-
-	if ((3600 < adc_val) && (adc_val < 3800))
-		key_string_on = 0x1C;
-	else
-		key_string_on = 0;
-
-	return sprintf(buf, "%x\n", key_string_on);
-}
 
 static int espresso_otg_set_host(struct otg_transceiver *otg,
 				 struct usb_bus *host)
@@ -1200,20 +977,6 @@ void __init omap4_espresso_connector_init(void)
 #ifdef CONFIG_USB_HOST_NOTIFY
 	espresso_host_notifier_init(espresso_otg);
 #endif
-
-	sec_switch_dev = device_create(sec_class, NULL, 0, NULL, "switch");
-	if (IS_ERR(sec_switch_dev)) {
-		pr_err("(%s): failed to created device (switch_dev)!\n",
-								__func__);
-		goto switch_dev_fail;
-	}
-
-	ret = sysfs_create_group(&sec_switch_dev->kobj,
-						&manual_switch_sel_group);
-	if (ret < 0)
-		pr_err("fail to  create manual switch_sel sysfs group (%d)\n",
-									ret);
-switch_dev_fail:
 
 	espresso_switch_initial_setup();
 

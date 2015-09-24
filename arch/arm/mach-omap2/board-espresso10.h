@@ -19,8 +19,14 @@
 
 #include <linux/serial_core.h>
 
-#include "sec_board_id.h"
-#include "sec_common.h"
+extern struct class *sec_class;
+/* GT-P5100 / GT-P5110 / GT-5113 */
+/* Reference Device */
+#define SEC_MACHINE_ESPRESSO10		0x02
+/* Non-Modem Device */
+#define SEC_MACHINE_ESPRESSO10_WIFI	0x04
+/* Non-Modem Device for Best Buy */
+#define SEC_MACHINE_ESPRESSO10_USA_BBY	0x06
 
 enum espresso10_adc_ch {
 	REMOTE_SENSE = 0,
