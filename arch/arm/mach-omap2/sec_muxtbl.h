@@ -15,8 +15,6 @@
 #ifndef __SEC_MUXTBL_H__
 #define __SEC_MUXTBL_H__
 
-#define SEC_MUXTBL_TYPE_ANY		0xFFFFFFFF
-
 #define __sec_muxtbl_s_attr__		\
 		__attribute__((used, __section__(".sec_muxtbl_start")))
 #define __sec_muxtbl_d_attr__		\

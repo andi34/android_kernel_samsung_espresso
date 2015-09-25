@@ -25,8 +25,6 @@
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
 
-#if defined CONFIG_ARCH_OMAP4
-
 static struct omap_mux_partition *core_part;
 static struct omap_mux_partition *wkup_part;
 
@@ -180,14 +178,10 @@ static void __init omap_muxtbl_set_usbbx_gpio(struct omap_muxtbl *muxtbl)
 			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_USBB_HSIC);
 }
 
-int __init omap4_muxtbl_init(int flags)
+void __init omap4_muxtbl_init(void)
 {
-	omap4_mux_init(NULL, NULL, flags);
-
 	core_part = omap_mux_get("core");
 	wkup_part = omap_mux_get("wkup");
-
-	return 0;
 }
 
 static int __init omap4_muxtbl_in_gpio_expander(struct omap_muxtbl *muxtbl)
@@ -222,17 +216,3 @@ int __init omap4_muxtbl_add_mux(struct omap_muxtbl *muxtbl)
 
 	return 0;
 }
-
-#else /* CONFIG_ARCH_OMAP4 */
-
-int __init omap4_muxtbl_init(int flags)
-{
-	return 0;
-}
-
-int __init omap4_muxtbl_add_mux(struct omap_muxtbl *muxtbl)
-{
-	return 0;
-}
-
-#endif /* CONFIG_ARCH_OMAP4 */

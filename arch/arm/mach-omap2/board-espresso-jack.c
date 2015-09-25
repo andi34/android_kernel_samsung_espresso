@@ -24,16 +24,16 @@
 
 #include "board-espresso.h"
 #include "control.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
+
+#define GPIO_DET_3_5		0
+#define GPIO_EAR_SEND_END	4
+#define GPIO_EAR_MICBIAS_EN	49
 
 #define ADC_CHANNEL_JACK	2
 
-static unsigned int gpio_ear_micbias_en;
-
 static void sec_jack_set_micbias_state(bool on)
 {
-	gpio_set_value(gpio_ear_micbias_en, on);
+	gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
 }
 
 static struct sec_jack_zone sec_jack_zones[] = {
@@ -133,38 +133,35 @@ static struct platform_device sec_device_jack = {
 };
 
 enum {
-	GPIO_DET_3_5 = 0,
-	GPIO_EAR_SEND_END,
-	GPIO_EAR_MICBIAS_EN
+	NUM_DET_3_5 = 0,
+	NUM_EAR_SEND_END,
+	NUM_EAR_MICBIAS_EN
 };
 
 void __init omap4_espresso_jack_init(void)
 {
 	struct gpio jack_gpios[] = {
-		[GPIO_DET_3_5] = {
+		[NUM_DET_3_5] = {
 			.flags	= GPIOF_IN,
 			.label	= "DET_3.5",
+			.gpio	= GPIO_DET_3_5,
 		},
-		[GPIO_EAR_SEND_END] = {
+		[NUM_EAR_SEND_END] = {
 			.flags	= GPIOF_IN,
 			.label	= "EAR_SEND_END",
+			.gpio	= GPIO_EAR_SEND_END,
 		},
-		[GPIO_EAR_MICBIAS_EN] = {
+		[NUM_EAR_MICBIAS_EN] = {
 			.flags	= GPIOF_OUT_INIT_LOW,
 			.label	= "EAR_MICBIAS_EN",
+			.gpio	= GPIO_EAR_MICBIAS_EN,
 		},
 	};
-	int i;
 
-	for (i = 0; i < ARRAY_SIZE(jack_gpios); i++)
-		jack_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(jack_gpios[i].label);
 	gpio_request_array(jack_gpios, ARRAY_SIZE(jack_gpios));
 
-	sec_jack_pdata.det_gpio = jack_gpios[GPIO_DET_3_5].gpio;
-	sec_jack_pdata.send_end_gpio = jack_gpios[GPIO_EAR_SEND_END].gpio;
-
-	gpio_ear_micbias_en = jack_gpios[GPIO_EAR_MICBIAS_EN].gpio;
+	sec_jack_pdata.det_gpio = jack_gpios[NUM_DET_3_5].gpio;
+	sec_jack_pdata.send_end_gpio = jack_gpios[NUM_EAR_SEND_END].gpio;
 
 	gpio_free(sec_jack_pdata.det_gpio);
 	gpio_free(sec_jack_pdata.send_end_gpio);

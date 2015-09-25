@@ -16,7 +16,6 @@
 #include <linux/gpio.h>
 #include <linux/delay.h>
 #include "mux.h"
-#include "omap_muxtbl.h"
 
 #include <linux/gp2a.h>
 #include <linux/i2c/twl6030-madc.h>
@@ -25,6 +24,10 @@
 #include <linux/al3201.h>
 
 #include "board-espresso.h"
+
+#define GPIO_ALS_INT_18 33
+#define GPIO_PS_VOUT    1
+#define GPIO_MSENSE_IRQ 157
 
 #define YAS_TA_OFFSET {0, 0, 0}
 #define YAS_USB_OFFSET {0, 0, 0}
@@ -40,14 +43,17 @@ struct gpio sensors_gpios[] = {
 	[NUM_ALS_INT] = {
 		.flags = GPIOF_IN,
 		.label = "ALS_INT_18",
+		.gpio  = GPIO_ALS_INT_18,
 	},
 	[NUM_PS_VOUT] = {
 		.flags = GPIOF_IN,
 		.label = "PS_VOUT",
+		.gpio  = GPIO_PS_VOUT,
 	},
 	[NUM_MSENSE_IRQ] = {
 		.flags = GPIOF_IN,
 		.label = "MSENSE_IRQ",
+		.gpio  = GPIO_MSENSE_IRQ,
 	},
 };
 
@@ -183,11 +189,6 @@ static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_wf[] = {
 
 void __init omap4_espresso_sensors_init(void)
 {
-	int i;
-	for (i = 0; i < ARRAY_SIZE(sensors_gpios); i++)
-		sensors_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(sensors_gpios[i].label);
-
 	gpio_request_array(sensors_gpios, ARRAY_SIZE(sensors_gpios));
 
 	omap_mux_init_gpio(sensors_gpios[NUM_MSENSE_IRQ].gpio,

@@ -47,11 +47,11 @@
 
 #include "board-espresso.h"
 #include "control.h"
-#include "mux.h"
 #include "omap4-sar-layout.h"
-#include "omap_muxtbl.h"
 
 #include "sec_muxtbl.h"
+
+#include "mux.h"
 
 struct class *sec_class;
 EXPORT_SYMBOL(sec_class);
@@ -200,6 +200,8 @@ static void __init espresso_init(void)
 	omap4_espresso_update_board_type();
 
 	omap4_espresso_emif_init();
+
+	omap4_mux_init(NULL, NULL, OMAP_PACKAGE_CBS);
 	sec_muxtbl_init(SEC_MACHINE_ESPRESSO, system_rev);
 
 	register_reboot_notifier(&espresso_reboot_notifier);

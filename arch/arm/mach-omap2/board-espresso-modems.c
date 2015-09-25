@@ -25,8 +25,15 @@
 
 #include "board-espresso.h"
 #include "mux.h"
-#include "omap_muxtbl.h"
-#include "omap44xx_muxtbl.h"
+
+#define GPIO_CP_ON          37
+#define GPIO_CP_PMU_RST     2
+#define GPIO_CP_PMU_RST_V10 39
+#define GPIO_RESET_REQ_N    50
+#define GPIO_PDA_ACTIVE     119
+#define GPIO_PHONE_ACTIVE   120
+#define GPIO_CP_DUMP_INT    56
+#define GPIO_SIM_DETECT     35
 
 /* umts target platform data */
 static struct modem_io_t umts_io_devices[] = {
@@ -117,43 +124,50 @@ static struct modem_io_t umts_io_devices[] = {
 };
 
 enum {
-	GPIO_CP_ON = 0,
-	GPIO_CP_RST,
-	GPIO_RESET_REQ,
-	GPIO_PDA_ACTIVE,
-	GPIO_PHONE_ACTIVE,
-	GPIO_CP_DUMP_INT,
-	GPIO_SIM_DETECT,
+	NUM_CP_ON = 0,
+	NUM_CP_RST,
+	NUM_RESET_REQ,
+	NUM_PDA_ACTIVE,
+	NUM_PHONE_ACTIVE,
+	NUM_CP_DUMP_INT,
+	NUM_SIM_DETECT,
 };
 
 struct gpio modem_gpios[] __initdata = {
-	[GPIO_CP_ON] = {
+	[NUM_CP_ON] = {
 		.flags  = GPIOF_OUT_INIT_LOW,
 		.label  = "CP_ON",
+		.gpio = GPIO_CP_ON,
 	},
-	[GPIO_CP_RST] = {
+	[NUM_CP_RST] = {
 		.flags  = GPIOF_OUT_INIT_LOW,
 		.label  = "CP_PMU_RST",
+		.gpio = GPIO_CP_PMU_RST,
 	},
-	[GPIO_RESET_REQ] = {
+	[NUM_RESET_REQ] = {
 		.flags  = GPIOF_OUT_INIT_LOW,
 		.label  = "RESET_REQ_N",
+		.gpio = GPIO_RESET_REQ_N,
 	},
-	[GPIO_PDA_ACTIVE] = {
+	[NUM_PDA_ACTIVE] = {
 		.flags  = GPIOF_OUT_INIT_LOW,
 		.label  = "PDA_ACTIVE",
+		.gpio = GPIO_PDA_ACTIVE,
 	},
-	[GPIO_PHONE_ACTIVE] = {
+	[NUM_PHONE_ACTIVE] = {
 		.flags  = GPIOF_IN,
 		.label  = "PHONE_ACTIVE",
+		.gpio = GPIO_PHONE_ACTIVE,
 	},
-	[GPIO_CP_DUMP_INT] = {
+	[NUM_CP_DUMP_INT] = {
 		.flags  = GPIOF_IN,
 		.label  = "CP_DUMP_INT",
+		.gpio = GPIO_CP_DUMP_INT,
 	 },
-	[GPIO_SIM_DETECT] = {
+	[NUM_SIM_DETECT] = {
 		.flags  = GPIOF_IN,
 		.label  = "SIM_DETECT",
+		.gpio = GPIO_SIM_DETECT,
 	},
 };
 
@@ -197,46 +211,56 @@ static struct modem_data umts_modem_data = {
 
 static void __init umts_modem_cfg_gpio(void)
 {
-	int i;
-	for (i = 0; i < ARRAY_SIZE(modem_gpios); i++)
-		modem_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(modem_gpios[i].label);
+	if (system_rev >= 10) {
+		modem_gpios[NUM_CP_RST].gpio = GPIO_CP_PMU_RST_V10;
+	}
+
 	gpio_request_array(modem_gpios, ARRAY_SIZE(modem_gpios));
 
-	umts_modem_data.gpio_cp_on = modem_gpios[GPIO_CP_ON].gpio;
-	umts_modem_data.gpio_reset_req_n = modem_gpios[GPIO_RESET_REQ].gpio;
-	umts_modem_data.gpio_cp_reset = modem_gpios[GPIO_CP_RST].gpio;
-	umts_modem_data.gpio_pda_active = modem_gpios[GPIO_PDA_ACTIVE].gpio;
-	umts_modem_data.gpio_phone_active = modem_gpios[GPIO_PHONE_ACTIVE].gpio;
-	umts_modem_data.gpio_cp_dump_int = modem_gpios[GPIO_CP_DUMP_INT].gpio;
-	umts_modem_data.gpio_sim_detect = modem_gpios[GPIO_SIM_DETECT].gpio;
+	umts_modem_data.gpio_cp_on = modem_gpios[NUM_CP_ON].gpio;
+	umts_modem_data.gpio_reset_req_n = modem_gpios[NUM_RESET_REQ].gpio;
+	umts_modem_data.gpio_cp_reset = modem_gpios[NUM_CP_RST].gpio;
+	umts_modem_data.gpio_pda_active = modem_gpios[NUM_PDA_ACTIVE].gpio;
+	umts_modem_data.gpio_phone_active = modem_gpios[NUM_PHONE_ACTIVE].gpio;
+	umts_modem_data.gpio_cp_dump_int = modem_gpios[NUM_CP_DUMP_INT].gpio;
+	umts_modem_data.gpio_sim_detect = modem_gpios[NUM_SIM_DETECT].gpio;
 
 	pr_debug("umts_modem_cfg_gpio done\n");
 }
 
 static void __init none_modem_cfg_mux(void)
 {
-	int i;
-	struct omap_mux_partition *partition;
 	struct omap_mux_partition *core = omap_mux_get("core");
-	struct omap_mux_partition *wkup = omap_mux_get("wkup");
-	struct omap_muxtbl *tbl;
 
 	omap_mux_write_array(core, mux_none_modem);
 
-	for (i = 0; i < ARRAY_SIZE(modem_gpios); i++) {
-		tbl = omap_muxtbl_find_by_name(modem_gpios[i].label);
-		if (!tbl)
-			continue;
-		if (tbl->domain == OMAP4_MUXTBL_DOMAIN_WKUP)
-			partition = wkup;
-		else
-			partition = core;
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_GPMC_AD11_OFFSET);
 
-		omap_mux_write(partition,
-			OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
-			tbl->mux.reg_offset);
-	}
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_GPMC_AD13_OFFSET);
+
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_GPMC_AD15_OFFSET);
+
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_GPMC_NCS0_OFFSET);
+
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_ABE_DMIC_CLK1_OFFSET);
+
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_ABE_DMIC_DIN1_OFFSET);
+
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_GPMC_NADV_ALE_OFFSET);
 }
 
 /* if use more than one modem device, then set id num */

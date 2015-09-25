@@ -14,11 +14,14 @@
 
 #include <linux/crc32.h>
 #include <linux/gpio.h>
-#include <linux/rbtree.h>
 
 #include "mux.h"
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
+
+#define OMAP_MUXTBL_ERR_INSERT_TREE	1
+#define OMAP_MUXTBL_ERR_ADD_MUX		2
+#define OMAP_MUXTBL_ERR_INT_GPIO	3
 
 static struct rb_root rb_muxtbl_l __initdata = RB_ROOT;
 static struct rb_root rb_muxtbl_p __initdata = RB_ROOT;
@@ -107,22 +110,6 @@ static int __init omap_muxtbl_rb_insert(struct omap_muxtbl *muxtbl)
 	return 0;
 }
 
-int __init omap_muxtbl_init(int flags)
-{
-	if (cpu_is_omap44xx())
-		return omap4_muxtbl_init(flags);
-
-	return -1;
-}
-
-static int __init omap_muxtbl_add_mux(struct omap_muxtbl *muxtbl)
-{
-	if (cpu_is_omap44xx())
-		return omap4_muxtbl_add_mux(muxtbl);
-
-	return -1;
-}
-
 int __init omap_muxtbl_add_muxset(struct omap_muxset *muxset)
 {
 	struct omap_muxtbl *muxtbl = muxset->muxtbl;
@@ -158,37 +145,10 @@ int __init omap_muxtbl_add_muxset(struct omap_muxset *muxset)
 		if (unlikely(err))
 			return -OMAP_MUXTBL_ERR_INSERT_TREE;
 
-		err = omap_muxtbl_add_mux(muxtbl);
+		err = omap4_muxtbl_add_mux(muxtbl);
 		if (unlikely(err))
 			return -OMAP_MUXTBL_ERR_ADD_MUX;
 	} while (--i && ++muxtbl);
 
 	return 0;
-}
-
-struct omap_muxtbl __init *omap_muxtbl_find_by_name(const char *label)
-{
-	unsigned int crc32 = crc32(0, label, strlen(label));
-
-	return omap_muxtbl_rb_search(crc32, 0);
-}
-
-struct omap_muxtbl __init *omap_muxtbl_find_by_pin(const char *pin)
-{
-	unsigned int crc32 = crc32(0, pin, strlen(pin));
-
-	return omap_muxtbl_rb_search(0, crc32);
-}
-
-int __init omap_muxtbl_get_gpio_by_name(const char *label)
-{
-	int gpio;
-	struct omap_muxtbl *muxtbl = omap_muxtbl_find_by_name(label);
-
-	if (unlikely(muxtbl == NULL))
-		gpio = -EINVAL;
-	else
-		gpio = muxtbl->gpio.gpio;
-
-	return gpio;
 }

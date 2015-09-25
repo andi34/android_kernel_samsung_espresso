@@ -18,6 +18,7 @@
 
 #include "mux.h"
 #include "omap_muxtbl.h"
+#include "omap44xx_muxtbl.h"
 #include "sec_muxtbl.h"
 
 static struct sec_muxtbl_node __sec_muxtbl_data_s __sec_muxtbl_s_attr__;
@@ -69,17 +70,9 @@ int __init sec_muxtbl_init(unsigned int type, unsigned int rev)
 	struct sec_muxtbl_node *head = NULL;
 	struct sec_muxtbl_node *cur;
 	struct list_head *pos;
-	int package = OMAP_PACKAGE_CBS;
 	int err;
-	static unsigned int init_done;
 
-	if (!init_done) {
-		err = omap_muxtbl_init(package);
-		if (err)
-			return err;
-
-		init_done = 1;
-	}
+	omap4_muxtbl_init();
 
 	if (__sec_muxtbl_setup_list(type, &head, rev))
 		return 0;

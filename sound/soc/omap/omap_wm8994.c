@@ -37,7 +37,6 @@
 
 #include <asm/mach-types.h>
 #include <plat/hardware.h>
-#include <plat/mux.h>
 #include <plat/mcbsp.h>
 #include <linux/gpio.h>
 #include <linux/pm_qos_params.h>
@@ -45,9 +44,6 @@
 #include "omap-pcm.h"
 #include "omap-mcbsp.h"
 #include "../codecs/wm8994.h"
-
-#include "../../../arch/arm/mach-omap2/mux.h"
-#include "../../../arch/arm/mach-omap2/omap_muxtbl.h"
 
 #if defined(CONFIG_MACH_SAMSUNG_ESPRESSO)
 #include "../../../arch/arm/mach-omap2/board-espresso.h"
@@ -107,20 +103,28 @@ int dock_status;
 
 static struct pm_qos_request_list pm_qos_handle;
 
+#define GPIO_CODEC_CLK_REQ  101
+#define GPIO_MICBIAS_EN     48
+#define GPIO_SUB_MICBIAS_EN 177
+#define GPIO_EAR_GND_SEL    171
+
 static struct gpio mclk = {
 	.flags = GPIOF_OUT_INIT_LOW,
 	.label = "CODEC_CLK_REQ",
+	.gpio  = GPIO_CODEC_CLK_REQ,
 };
 
 static struct gpio main_mic_bias = {
 	.flags  = GPIOF_OUT_INIT_LOW,
 	.label  = "MICBIAS_EN",
+	.gpio   = GPIO_MICBIAS_EN,
 };
 
 #ifdef CONFIG_SND_USE_SUB_MIC
 static struct gpio sub_mic_bias = {
 	.flags  = GPIOF_OUT_INIT_LOW,
 	.label  = "SUB_MICBIAS_EN",
+	.gpio   = GPIO_SUB_MICBIAS_EN,
 };
 #endif /* CONFIG_SND_USE_SUB_MIC */
 
@@ -128,6 +132,7 @@ static struct gpio sub_mic_bias = {
 static struct gpio ear_select = {
 	.flags = GPIOF_OUT_INIT_LOW,
 	.label = "EAR_GND_SEL",
+	.gpio  = GPIO_EAR_GND_SEL,
 };
 
 static int hp_output_mode;
@@ -1219,35 +1224,17 @@ static int __init omap4_audio_init(void)
 #endif /* not CONFIG_SAMSUNG_JACK */
 	int ret;
 
-	mclk.gpio = omap_muxtbl_get_gpio_by_name(mclk.label);
-	if (mclk.gpio == -EINVAL) {
-		pr_err("failed to get gpio name for %s\n", mclk.label);
-		ret = -EINVAL;
-		goto mclk_err;
-	}
 	ret = gpio_request(mclk.gpio, "mclk");
 	if (ret < 0)
 		goto mclk_err;
 	gpio_direction_output(mclk.gpio, 0);
 
-	main_mic_bias.gpio = omap_muxtbl_get_gpio_by_name(main_mic_bias.label);
-	if (main_mic_bias.gpio == -EINVAL) {
-		pr_err("failed to get gpio name for %s\n", main_mic_bias.label);
-		ret = -EINVAL;
-		goto main_mic_err;
-	}
 	ret = gpio_request(main_mic_bias.gpio, "main_mic_bias");
 	if (ret < 0)
 		goto main_mic_err;
 	gpio_direction_output(main_mic_bias.gpio, 0);
 
 #ifdef CONFIG_SND_USE_SUB_MIC
-	sub_mic_bias.gpio = omap_muxtbl_get_gpio_by_name(sub_mic_bias.label);
-	if (sub_mic_bias.gpio == -EINVAL) {
-		pr_err("failed to get gpio name for %s\n", sub_mic_bias.label);
-		ret = -EINVAL;
-		goto sub_mic_err;
-	}
 	ret = gpio_request(sub_mic_bias.gpio, "sub_mic_bias");
 	if (ret < 0)
 		goto sub_mic_err;
@@ -1256,9 +1243,6 @@ static int __init omap4_audio_init(void)
 
 #ifdef CONFIG_SND_EAR_GND_SEL
 	hp_output_mode = 1;
-	ear_select.gpio = omap_muxtbl_get_gpio_by_name(ear_select.label);
-	if (ear_select.gpio == -EINVAL)
-		return -EINVAL;
 	ret = gpio_request(ear_select.gpio, "ear_select");
 	if (ret < 0)
 		goto ear_select_err;

@@ -17,9 +17,6 @@
 #include <linux/gpio.h>
 #include <asm/mach-types.h>
 
-#include "mux.h"
-#include "omap_muxtbl.h"
-#include "omap44xx_muxtbl.h"
 #include "board-espresso.h"
 
 #define CLOCK_VALUE 800000
@@ -30,19 +27,24 @@
 #define NANO_SEC 1000000000
 #define MICRO_SEC 1000000
 
+#define GPIO_IRDA_EN      59
+#define GPIO_IRDA_CONTROL 152
+
 enum {
-	GPIO_IRDA_EN = 0,
-	GPIO_IRDA_CONTROL,
+	NUM_IRDA_EN = 0,
+	NUM_IRDA_CONTROL,
 };
 
 static struct gpio irled_gpios[] = {
-	[GPIO_IRDA_EN] = {
+	[NUM_IRDA_EN] = {
 		.flags = GPIOF_OUT_INIT_LOW,
 		.label = "IRDA_EN",
+		.gpio  = GPIO_IRDA_EN,
 	},
-	[GPIO_IRDA_CONTROL] = {
+	[NUM_IRDA_CONTROL] = {
 		.flags = GPIOF_OUT_INIT_LOW,
 		.label = "IRDA_CONTROL",
+		.gpio  = GPIO_IRDA_CONTROL,
 	},
 };
 
@@ -63,9 +65,8 @@ static void irled_work(struct work_struct *work)
 	unsigned int off;
 	unsigned int i;
 	unsigned int j;
-	int ret;
 
-	gpio_direction_output(irled_gpios[GPIO_IRDA_EN].gpio, 1);
+	gpio_direction_output(irled_gpios[NUM_IRDA_EN].gpio, 1);
 
 	__udelay(1000);
 
@@ -82,10 +83,10 @@ static void irled_work(struct work_struct *work)
 
 		for (j = 0; j < ir_data.signal[i]; j++) {
 			gpio_direction_output(irled_gpios
-					      [GPIO_IRDA_CONTROL].gpio, 1);
+					      [NUM_IRDA_CONTROL].gpio, 1);
 			__udelay(on);
 			gpio_direction_output(irled_gpios
-					      [GPIO_IRDA_CONTROL].gpio, 0);
+					      [NUM_IRDA_CONTROL].gpio, 0);
 			__udelay(off);
 		}
 
@@ -106,14 +107,14 @@ static void irled_work(struct work_struct *work)
 			local_irq_disable();
 		}
 	}
-	gpio_direction_output(irled_gpios[GPIO_IRDA_CONTROL].gpio, 1);
+	gpio_direction_output(irled_gpios[NUM_IRDA_CONTROL].gpio, 1);
 	__udelay(on);
-	gpio_direction_output(irled_gpios[GPIO_IRDA_CONTROL].gpio, 0);
+	gpio_direction_output(irled_gpios[NUM_IRDA_CONTROL].gpio, 0);
 	__udelay(off);
 
 	local_irq_enable();
 
-	gpio_direction_output(irled_gpios[GPIO_IRDA_EN].gpio, 0);
+	gpio_direction_output(irled_gpios[NUM_IRDA_EN].gpio, 0);
 }
 
 static ssize_t irled_store(struct device *dev, struct device_attribute *attr,
@@ -305,9 +306,6 @@ int __init omap4_espresso_irled_init(void)
 	if (system_rev > 6 && boardtype != SEC_MACHINE_ESPRESSO_USA_BBY)
 		return 0;
 
-	for (i = 0; i < ARRAY_SIZE(irled_gpios); i++)
-		irled_gpios[i].gpio =
-		    omap_muxtbl_get_gpio_by_name(irled_gpios[i].label);
 	gpio_request_array(irled_gpios, ARRAY_SIZE(irled_gpios));
 
 	ret = irled_init();

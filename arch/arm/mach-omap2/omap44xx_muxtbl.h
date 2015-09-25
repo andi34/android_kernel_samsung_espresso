@@ -33,7 +33,7 @@
 	.pin = #_M0,							\
 }
 
-extern int __init omap4_muxtbl_init(int flags);
+extern void __init omap4_muxtbl_init(void);
 
 extern int __init omap4_muxtbl_add_mux(struct omap_muxtbl *muxtbl);
 

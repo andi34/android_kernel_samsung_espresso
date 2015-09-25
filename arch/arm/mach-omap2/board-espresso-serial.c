@@ -27,8 +27,12 @@
 
 #include "board-espresso.h"
 #include "mux.h"
-#include "omap_muxtbl.h"
-#include "omap44xx_muxtbl.h"
+
+#define GPIO_GPS_PWR_EN 173
+#define GPIO_GPS_nRST   178
+
+#define SDA_PIN_ADC_I2C 66
+#define SCL_PIN_ADC_I2C 65
 
 static struct i2c_board_info __initdata espresso_i2c_board_info[] = {
 	{
@@ -83,8 +87,8 @@ static void __init espresso_i2c_init(void)
 }
 
 static struct i2c_gpio_platform_data espresso_gpio_i2c6_pdata = {
-	/* .sda_pin = (ADC_I2C_SDA_1.8V), */
-	/* .scl_pin = (ADC_I2C_SCL_1.8V), */
+	.sda_pin = SDA_PIN_ADC_I2C,
+	.scl_pin = SCL_PIN_ADC_I2C,
 	.udelay = 10,
 	.timeout = 0,
 };
@@ -97,34 +101,26 @@ static struct platform_device espresso_gpio_i2c6_device = {
 	}
 };
 
-static void __init espresso_gpio_i2c_init(void)
-{
-	/* gpio-i2c 6 */
-	espresso_gpio_i2c6_pdata.sda_pin =
-		omap_muxtbl_get_gpio_by_name("ADC_I2C_SDA_1.8V");
-	espresso_gpio_i2c6_pdata.scl_pin =
-		omap_muxtbl_get_gpio_by_name("ADC_I2C_SCL_1.8V");
-}
-
 enum {
-	GPIO_GPS_PWR_EN = 0,
-	GPIO_GPS_nRST
+	NUM_GPS_PWR_EN = 0,
+	NUM_GPS_nRST
 };
 
 static void espresso_bcmgps_init(void)
 {
 	struct device *gps_dev;
 	struct gpio gps_gpios[] = {
-		[GPIO_GPS_PWR_EN] = {
+		[NUM_GPS_PWR_EN] = {
 			.flags = GPIOF_OUT_INIT_LOW,
 			.label = "GPS_PWR_EN",
+			.gpio  = GPIO_GPS_PWR_EN,
 		},
-		[GPIO_GPS_nRST] = {
+		[NUM_GPS_nRST] = {
 			.flags = GPIOF_OUT_INIT_HIGH,
 			.label = "GPS_nRST",
+			.gpio  = GPIO_GPS_nRST,
 		},
 	};
-	int i;
 
 	gps_dev = device_create(sec_class, NULL, 0, NULL, "gps");
 	if (IS_ERR(gps_dev)) {
@@ -132,19 +128,15 @@ static void espresso_bcmgps_init(void)
 		return;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(gps_gpios); i++)
-		gps_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(gps_gpios[i].label);
-
 	gpio_request_array(gps_gpios, ARRAY_SIZE(gps_gpios));
 
-	gpio_export(gps_gpios[GPIO_GPS_PWR_EN].gpio, 1);
-	gpio_export(gps_gpios[GPIO_GPS_nRST].gpio, 1);
+	gpio_export(gps_gpios[NUM_GPS_PWR_EN].gpio, 1);
+	gpio_export(gps_gpios[NUM_GPS_nRST].gpio, 1);
 
-	gpio_export_link(gps_dev, gps_gpios[GPIO_GPS_PWR_EN].label,
-			 gps_gpios[GPIO_GPS_PWR_EN].gpio);
-	gpio_export_link(gps_dev, gps_gpios[GPIO_GPS_nRST].label,
-			 gps_gpios[GPIO_GPS_nRST].gpio);
+	gpio_export_link(gps_dev, gps_gpios[NUM_GPS_PWR_EN].label,
+			 gps_gpios[NUM_GPS_PWR_EN].gpio);
+	gpio_export_link(gps_dev, gps_gpios[NUM_GPS_nRST].label,
+			 gps_gpios[NUM_GPS_nRST].gpio);
 }
 
 static struct omap_device_pad espresso_uart1_pads[] __initdata = {
@@ -221,29 +213,15 @@ static struct omap_uart_port_info espresso_uart2_info __initdata = {
 
 static void __init omap_serial_none_pads_cfg_mux(void)
 {
-	int i;
-	struct omap_mux_partition *partition;
 	struct omap_mux_partition *core = omap_mux_get("core");
-	struct omap_mux_partition *wkup = omap_mux_get("wkup");
-	struct omap_muxtbl *tbl;
-	char *none_pins[] = {
-		"AP_FLM_RXD(nc)",
-		"AP_FLM_TXD(nc)",
-	};
 
-	for (i = 0; i < ARRAY_SIZE(none_pins); i++) {
-		tbl = omap_muxtbl_find_by_name(none_pins[i]);
-		if (!tbl)
-			continue;
-		if (tbl->domain == OMAP4_MUXTBL_DOMAIN_WKUP)
-			partition = wkup;
-		else
-			partition = core;
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_UART3_RX_IRRX_OFFSET);
 
-		omap_mux_write(partition,
-			OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
-			tbl->mux.reg_offset);
-	}
+	omap_mux_write(core,
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_UART3_TX_IRTX_OFFSET);
 }
 
 static void __init espresso_uart_init(void)
@@ -268,7 +246,6 @@ static struct platform_device *espresso_serial_devices[] __initdata = {
 void __init omap4_espresso_serial_init(void)
 {
 	espresso_i2c_init();
-	espresso_gpio_i2c_init();
 	espresso_uart_init();
 
 	platform_add_devices(espresso_serial_devices,
