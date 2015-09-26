@@ -53,12 +53,6 @@ config BT_BCM4330
 	help
 		Adds BCM4330 RFKILL driver for Broadcom BCM4330 chipset
 
-config BT_BCM4334
-	bool "Enable BCM4334 driver"
-	default n
-	help
-		Adds BCM4334 RFKILL driver for Broadcom BCM4334 chipset
-
 config BT_MGMT
 	bool "Bluetooth Mgmt"
 	default n

@@ -169,11 +169,6 @@ si_sdiod_drive_strength_init(si_t *sih, osl_t *osh, uint32 drivestrength)
 		str_mask = 0x00003800;
 		str_shift = 11;
 		break;
-	case SDIOD_DRVSTR_KEY(BCM4334_CHIP_ID, 17):
-		str_tab = (sdiod_drive_str_t *)&sdiod_drive_strength_tab6_1v8;
-		str_mask = 0x00001800;
-		str_shift = 11;
-		break;
 	default:
 		PMU_MSG(("No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
 		         bcm_chipname(sih->chip, chn, 8), sih->chiprev, sih->pmurev));

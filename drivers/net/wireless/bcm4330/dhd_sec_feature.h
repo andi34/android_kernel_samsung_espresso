@@ -81,11 +81,7 @@
 
 #undef WRITE_MACADDR
 #undef READ_MACADDR
-#ifdef CONFIG_BCM4334
-#define READ_MACADDR
-#else
 #define RDWR_MACADDR
-#endif
 
 #if (WLAN_REGION_CODE == 201) /* SKT */
 #endif

@@ -766,9 +766,6 @@ dhdsdio_sr_init(dhd_bus_t *bus)
 	uint8 val;
 	int err = 0;
 
-	if ((bus->sih->chip == BCM4334_CHIP_ID) && (bus->sih->chiprev == 2))
-		dhdsdio_srwar_init(bus);
-
 	val = bcmsdh_cfg_read(bus->sdh, SDIO_FUNC_1, SBSDIO_FUNC1_WAKEUPCTRL, NULL);
 	val |= 1 << SBSDIO_FUNC1_WCTRL_HTWAIT_SHIFT;
 	bcmsdh_cfg_write(bus->sdh, SDIO_FUNC_1, SBSDIO_FUNC1_WAKEUPCTRL,
@@ -994,14 +991,6 @@ dhdsdio_clk_devsleep_iovar(dhd_bus_t *bus, bool on)
 			dhdsdio_clkctl(bus, CLK_SDONLY, FALSE);
 		}
 
-		if ((bus->sih->chip == BCM4334_CHIP_ID) && (bus->sih->chiprev == 2)) {
-			SPINWAIT((bcmsdh_gpioin(bus->sdh, GPIO_DEV_SRSTATE) != TRUE),
-				GPIO_DEV_SRSTATE_TIMEOUT);
-
-			if (bcmsdh_gpioin(bus->sdh, GPIO_DEV_SRSTATE) == FALSE) {
-				DHD_ERROR(("ERROR: GPIO_DEV_SRSTATE still low!\n"));
-			}
-		}
 #ifdef USE_CMD14
 		err = bcmsdh_sleep(bus->sdh, FALSE);
 		if (SLPAUTO_ENAB(bus) && (err != 0)) {
@@ -3115,7 +3104,6 @@ err:
 #define CC_PLL_CHIPCTRL_SERIAL_ENAB		(1  << 24)
 #define CC_CHIPCTRL_JTAG_SEL			(1  << 3)
 #define CC_CHIPCTRL_GPIO_SEL				(0x3)
-#define CC_PLL_CHIPCTRL_SERIAL_ENAB_4334	(1  << 28)
 
 static int
 dhd_serialconsole(dhd_bus_t *bus, bool set, bool enable, int *bcmerror)
@@ -3142,19 +3130,6 @@ dhd_serialconsole(dhd_bus_t *bus, bool set, bool enable, int *bcmerror)
 	if (bus->sih->chip == BCM4330_CHIP_ID) {
 		uart_enab = CC_PLL_CHIPCTRL_SERIAL_ENAB;
 	}
-	else if (bus->sih->chip == BCM4334_CHIP_ID ||
-		bus->sih->chip == BCM43341_CHIP_ID) {
-		if (enable) {
-			/* Moved to PMU chipcontrol 1 from 4330 */
-			int_val &= ~gpio_sel;
-			int_val |= jtag_sel;
-		} else {
-			int_val |= gpio_sel;
-			int_val &= ~jtag_sel;
-		}
-		uart_enab = CC_PLL_CHIPCTRL_SERIAL_ENAB_4334;
-	}
-
 	if (!set)
 		return (int_val & uart_enab);
 	if (enable)
@@ -6766,10 +6741,6 @@ dhdsdio_chipmatch(uint16 chipid)
 		return TRUE;
 	if (chipid == BCM4314_CHIP_ID)
 		return TRUE;
-	if (chipid == BCM4334_CHIP_ID)
-		return TRUE;
-	if (chipid == BCM43341_CHIP_ID)
-		return TRUE;
 	if (chipid == BCM43239_CHIP_ID)
 		return TRUE;
 	if (chipid == BCM4324_CHIP_ID)
@@ -8029,65 +8000,3 @@ dhd_bus_membytes(dhd_pub_t *dhdp, bool set, uint32 address, uint8 *data, uint si
 	bus = dhdp->bus;
 	return dhdsdio_membytes(bus, set, address, data, size);
 }
-#if defined(SUPPORT_MULTIPLE_REVISION)
-static int
-concate_revision_bcm4334(dhd_bus_t *bus, char *path, int path_len)
-{
-#define	REV_ID_ADDR	0x1E008F90
-#define BCM4334_B1_UNIQUE	0x30312E36
-
-	uint chipver;
-	uint32 unique_id;
-	uint8 data[4];
-	char chipver_tag[4] = "_b0";
-
-	DHD_TRACE(("%s: BCM4334 Multiple Revision Check\n", __FUNCTION__));
-	if (bus->sih->chip != BCM4334_CHIP_ID) {
-		DHD_ERROR(("%s:Chip is not BCM4334\n", __FUNCTION__));
-		return -1;
-	}
-	chipver = bus->sih->chiprev;
-	if (chipver == 0x2) {
-		dhdsdio_membytes(bus, FALSE, REV_ID_ADDR, data, 4);
-		unique_id = load32_ua(data);
-		if (unique_id == BCM4334_B1_UNIQUE)
-			chipver = 0x01;
-	}
-	DHD_ERROR(("CHIP VER = [0x%x]\n", chipver));
-	if (chipver == 1) {
-		DHD_ERROR(("----- CHIP bcm4334_B0 -----\n"));
-		chipver_tag[2] = '0';
-		strcpy(chipver_tag, "_b0");
-	} else if (chipver == 2) {
-		DHD_ERROR(("----- CHIP bcm4334_B1 -----\n"));
-		chipver_tag[2] = '1';
-	} else if (chipver == 3) {
-		DHD_ERROR(("----- CHIP bcm4334_B2 -----\n"));
-		chipver_tag[2] = '2';
-		strcpy(chipver_tag, "_b2");
-	}
-	else {
-		DHD_ERROR(("----- Invalid chip version -----\n"));
-		return -1;
-	}
-	strcat(path, chipver_tag);
-#undef REV_ID_ADDR
-#undef BCM4334_B1_UNIQUE
-	return 0;
-}
-
-int
-concate_revision(dhd_bus_t *bus, char *path, int path_len)
-{
-
-	if (!bus || !bus->sih) {
-		DHD_ERROR(("%s:Bus is Invalid\n", __FUNCTION__));
-		return -1;
-	}
-	if (bus->sih->chip == BCM4334_CHIP_ID) {
-		return concate_revision_bcm4334(bus, path, path_len);
-	}
-	DHD_ERROR(("REVISION SPECIFIC feature is not required\n"));
-	return -1;
-}
-#endif /* MULTIPLE_REVISION */
