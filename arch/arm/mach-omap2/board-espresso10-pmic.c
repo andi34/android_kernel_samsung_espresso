@@ -56,7 +56,7 @@ char *rpmsg_cam_regulator_name[] = {
 };
 
 #ifdef CONFIG_SND_SOC_WM8994
-static const struct regulator_consumer_supply vbatt_supplies[] = {
+static struct regulator_consumer_supply vbatt_supplies[] = {
 	REGULATOR_SUPPLY("LDO1VDD", "1-001a"),
 	REGULATOR_SUPPLY("SPKVDD1", "1-001a"),
 	REGULATOR_SUPPLY("SPKVDD2", "1-001a"),
@@ -67,7 +67,7 @@ static const struct regulator_consumer_supply vbatt_supplies[] = {
 	REGULATOR_SUPPLY("DBVDD3", "1-001a"),
 };
 
-static const struct regulator_init_data vbatt_initdata = {
+static struct regulator_init_data vbatt_initdata = {
 	.constraints = {
 		.always_on = 1,
 	},
@@ -75,7 +75,7 @@ static const struct regulator_init_data vbatt_initdata = {
 	.consumer_supplies = vbatt_supplies,
 };
 
-static const struct fixed_voltage_config vbatt_config = {
+static struct fixed_voltage_config vbatt_config = {
 	.init_data = &vbatt_initdata,
 	.microvolts = 1800000,
 	.supply_name = "VBATT",
@@ -90,11 +90,11 @@ static struct platform_device vbatt_device = {
 	},
 };
 
-static const struct regulator_consumer_supply wm1811_ldo1_supplies[] = {
+static struct regulator_consumer_supply wm1811_ldo1_supplies[] = {
 	REGULATOR_SUPPLY("AVDD1", "1-001a"),
 };
 
-static const struct regulator_init_data wm1811_ldo1_initdata = {
+static struct regulator_init_data wm1811_ldo1_initdata = {
 	.constraints = {
 		.name = "WM1811 LDO1",
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
@@ -103,11 +103,11 @@ static const struct regulator_init_data wm1811_ldo1_initdata = {
 	.consumer_supplies = wm1811_ldo1_supplies,
 };
 
-static const struct regulator_consumer_supply wm1811_ldo2_supplies[] = {
+static struct regulator_consumer_supply wm1811_ldo2_supplies[] = {
 	REGULATOR_SUPPLY("DCVDD", "1-001a"),
 };
 
-static const struct regulator_init_data wm1811_ldo2_initdata = {
+static struct regulator_init_data wm1811_ldo2_initdata = {
 	.constraints = {
 		.name = "WM1811 LDO2",
 		.always_on = true,  /* Actually status changed by LDO1 */
@@ -382,23 +382,6 @@ static struct regulator_init_data espresso10_v2v1 = {
 	.consumer_supplies	= espresso10_v2v1_supply,
 };
 
-#ifdef CONFIG_TWL6040_CODEC
-static struct twl4030_codec_audio_data espresso10_audio = {
-	/* single-step ramp for headset and handsfree */
-	.hs_left_step		= 0x0f,
-	.hs_right_step		= 0x0f,
-	.hf_left_step		= 0x1d,
-	.hf_right_step		= 0x1d,
-	.ep_step		= 0x0f,
-};
-
-static struct twl4030_codec_data espresso10_codec = {
-	.audio		= &espresso10_audio,
-	.naudint_irq	= OMAP44XX_IRQ_SYS_2N,
-	.irq_base	= TWL6040_CODEC_IRQ_BASE,
-};
-#endif
-
 static struct twl4030_madc_platform_data espresso10_madc = {
 	.irq_line	= -1,
 	.features	= TWL6030_CLASS | TWL6032_SUBCLASS,
@@ -498,9 +481,6 @@ static struct twl4030_platform_data espresso10_twl6030_pdata = {
 	.v2v1		= &espresso10_v2v1,
 
 	/* children */
-#ifdef CONFIG_TWL6040_CODEC
-	.codec		= &espresso10_codec,
-#endif
 	.madc		= &espresso10_madc,
 };
 
@@ -596,12 +576,8 @@ static struct twl4030_platform_data espresso10_twl6032_pdata_rev02 = {
 	.clk32kaudio	= &espresso10_clk32kaudio,
 
 	/* children */
-#ifdef CONFIG_TWL6040_CODEC
-	.codec		= &espresso10_codec,
-#endif
 	.madc		= &espresso10_madc,
 };
-
 
 struct twl4030_rtc_data espresso10_rtc = {
 	.auto_comp = 1,
@@ -633,9 +609,6 @@ static struct twl4030_platform_data espresso10_twl6032_pdata_rev03 = {
 	.clk32kaudio	= &espresso10_clk32kaudio,
 
 	/* children */
-#ifdef CONFIG_TWL6040_CODEC
-	.codec		= &espresso10_codec,
-#endif
 	.madc		= &espresso10_madc,
 	.rtc		= &espresso10_rtc,
 };
@@ -694,11 +667,6 @@ static struct i2c_board_info
 
 static void __init espresso10_audio_init(void)
 {
-#ifdef CONFIG_TWL6040_CODEC
-	espresso10_codec.audpwron_gpio =
-		omap_muxtbl_get_gpio_by_name("AUD_PWRON");
-#endif
-
 #ifdef CONFIG_SND_SOC_WM8994
 	platform_device_register(&vbatt_device);
 
@@ -762,7 +730,6 @@ void __init omap4_espresso10_pmic_init(void)
 	 */
 	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY && system_rev >= 7)
 		espresso10_twl6032_pdata_rev03.ldoln = &espresso10_vdac;
-
 
 	/*
 	 * Drive MSECURE high for TWL6030 write access.
