@@ -38,8 +38,9 @@
 #include "board-espresso10.h"
 #include "control.h"
 #include "hsmmc.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
+
+#define GPIO_WLAN_IRQ   81
+#define GPIO_WLAN_PMENA 104
 
 #ifdef CONFIG_BROADCOM_WIFI_RESERVED_MEM
 #define WLAN_STATIC_SCAN_BUF0		5
@@ -229,6 +230,7 @@ static struct regulator_init_data espresso10_vmmc5 = {
 static struct fixed_voltage_config espresso10_vwlan = {
 	.supply_name		= "vwl1271",
 	.microvolts		= 2000000, /* 2.0V */
+	.gpio			= GPIO_WLAN_PMENA,
 	.startup_delay		= 70000, /* 70msec */
 	.enable_high		= 1,
 	.enabled_at_boot	= 0,
@@ -406,20 +408,14 @@ static struct platform_device espresso10_wifi_device = {
 
 static void __init espresso10_wlan_gpio(void)
 {
-	unsigned int gpio_wlan_host_wake =
-		omap_muxtbl_get_gpio_by_name("WLAN_HOST_WAKE");
-
 	pr_debug("%s: start\n", __func__);
 
-	espresso10_vwlan.gpio = omap_muxtbl_get_gpio_by_name("WLAN_EN");
-
-	if (gpio_wlan_host_wake != -EINVAL) {
-		espresso10_wifi_resources[0].start =
-			gpio_to_irq(gpio_wlan_host_wake);
-		espresso10_wifi_resources[0].end =
-			espresso10_wifi_resources[0].start;
-		gpio_request(gpio_wlan_host_wake, "WLAN_HOST_WAKE");
-		gpio_direction_input(gpio_wlan_host_wake);
+	espresso10_wifi_resources[0].start =
+		gpio_to_irq(GPIO_WLAN_IRQ);
+	espresso10_wifi_resources[0].end =
+		espresso10_wifi_resources[0].start;
+	gpio_request(GPIO_WLAN_IRQ, "WLAN_HOST_WAKE");
+	gpio_direction_input(GPIO_WLAN_IRQ);
 	}
 }
 

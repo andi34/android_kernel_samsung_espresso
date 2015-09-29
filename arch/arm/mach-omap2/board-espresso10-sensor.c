@@ -18,7 +18,6 @@
 #include <linux/gpio.h>
 #include <linux/delay.h>
 #include "mux.h"
-#include "omap_muxtbl.h"
 
 #include <linux/i2c/twl6030-madc.h>
 #include <linux/regulator/consumer.h>
@@ -27,29 +26,39 @@
 
 #include "board-espresso10.h"
 
+#define GPIO_ALS_INT_18 33
+/* Unused? #define GPIO_PS_VOUT    ? */
+#define GPIO_MSENSE_IRQ 157
 
 #define YAS_TA_OFFSET {200, -4600, -1100}
 #define YAS_USB_OFFSET {0, -1100, -300}
 #define YAS_FULL_OFFSET {0, 0, 0}
 
 enum {
-	GPIO_ALS_INT = 0,
-	GPIO_PS_VOUT,
-	GPIO_MSENSE_IRQ,
+	NUM_ALS_INT = 0,
+/* Unused?
+	NUM_PS_VOUT,
+*/
+	NUM_MSENSE_IRQ,
 };
 
 struct gpio sensors_gpios[] = {
-	[GPIO_ALS_INT] = {
+	[NUM_ALS_INT] = {
 		.flags = GPIOF_IN,
 		.label = "ALS_INT_18",
+		.gpio  = GPIO_ALS_INT_18,
 	},
-	[GPIO_PS_VOUT] = {
+/* Unused?
+	[NUM_PS_VOUT] = {
 		.flags = GPIOF_IN,
 		.label = "PS_VOUT",
+		.gpio  = GPIO_PS_VOUT,
 	},
-	[GPIO_MSENSE_IRQ] = {
+*/
+	[NUM_MSENSE_IRQ] = {
 		.flags = GPIOF_IN,
 		.label = "MSENSE_IRQ",
+		.gpio  = GPIO_MSENSE_IRQ,
 	},
 };
 
@@ -61,15 +70,15 @@ static int bh1721fvc_light_sensor_reset(void)
 	omap_mux_init_gpio(sensors_gpios[GPIO_ALS_INT].gpio,
 		OMAP_PIN_OUTPUT);
 
-	gpio_free(sensors_gpios[GPIO_ALS_INT].gpio);
+	gpio_free(sensors_gpios[NUM_ALS_INT].gpio);
 
-	gpio_request(sensors_gpios[GPIO_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
+	gpio_request(sensors_gpios[NUM_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
 
-	gpio_direction_output(sensors_gpios[GPIO_ALS_INT].gpio, 0);
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 0);
 
 	udelay(2);
 
-	gpio_direction_output(sensors_gpios[GPIO_ALS_INT].gpio, 1);
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 1);
 
 	return 0;
 
@@ -154,24 +163,18 @@ static struct i2c_board_info __initdata espresso10_sensors_i2c4_boardinfo[] = {
 
 void __init omap4_espresso10_sensors_init(void)
 {
-	int i;
-	for (i = 0; i < ARRAY_SIZE(sensors_gpios); i++)
-		sensors_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(sensors_gpios[i].label);
-
 	gpio_request_array(sensors_gpios, ARRAY_SIZE(sensors_gpios));
 
-	omap_mux_init_gpio(sensors_gpios[GPIO_MSENSE_IRQ].gpio,
+	omap_mux_init_gpio(sensors_gpios[NUM_MSENSE_IRQ].gpio,
 		OMAP_PIN_OUTPUT);
 
-	gpio_free(sensors_gpios[GPIO_MSENSE_IRQ].gpio);
+	gpio_free(sensors_gpios[NUM_MSENSE_IRQ].gpio);
 
-	gpio_request(sensors_gpios[GPIO_MSENSE_IRQ].gpio, "MSENSE_IRQ");
+	gpio_request(sensors_gpios[NUM_MSENSE_IRQ].gpio, "MSENSE_IRQ");
 
-	gpio_direction_output(sensors_gpios[GPIO_MSENSE_IRQ].gpio, 1);
+	gpio_direction_output(sensors_gpios[NUM_MSENSE_IRQ].gpio, 1);
 
 	i2c_register_board_info(4, espresso10_sensors_i2c4_boardinfo,
 				ARRAY_SIZE(espresso10_sensors_i2c4_boardinfo));
 
 }
-

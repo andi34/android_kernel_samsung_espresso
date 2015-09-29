@@ -24,9 +24,9 @@
 
 #include "board-espresso10.h"
 #include <linux/gpio.h>
-#include "mux.h"
-#include "omap_muxtbl.h"
 #include "hsmmc.h"
+
+#define GPIO_EMMC_EN	53
 
 static struct omap2_hsmmc_info espresso10_mmc_info[] = {
 	{
@@ -105,9 +105,9 @@ static int __init espresso10_hsmmc_init(struct omap2_hsmmc_info *controllers)
 
 	/* Board specific GPIO pin for External LDO control */
 	for (c = controllers; c->mmc; c++) {
-		if ((c->mmc == 2) && (c->external_ldo == true))
-			c->gpio_for_ldo =
-				omap_muxtbl_get_gpio_by_name("eMMC_EN");
+		if ((c->mmc == 2) && (c->external_ldo == true) {
+			c->gpio_for_ldo = GPIO_EMMC_EN;
+		}
 	}
 
 	omap2_hsmmc_init(controllers);

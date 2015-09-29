@@ -32,9 +32,11 @@
 #include "pm.h"
 
 #include "board-espresso10.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
 #include "common-board-devices.h"
+
+#define GPIO_CODEC_LDO_EN 45
+#define GPIO_SYS_DRM_MSEC 6
+#define GPIO_TF_EN        34
 
 #define TWL_REG_CONTROLLER_INT_MASK	0x00
 #define TWL_CONTROLLER_MVBUS_DET	(1 << 1)
@@ -131,6 +133,7 @@ static struct wm8994_pdata wm1811_pdata = {
 
 	.ldo = {
 		{
+			.enable    = GPIO_CODEC_LDO_EN,
 			.init_data = &wm1811_ldo1_initdata,
 		},
 		{
@@ -217,6 +220,7 @@ static struct regulator_init_data espresso10_vmmc = {
 static struct fixed_voltage_config espresso10_vmmc_config = {
 	.supply_name		= "vmmc",
 	.microvolts		= 2800000,
+	.gpio			= GPIO_TF_EN,
 	.startup_delay		= 0,
 	.enable_high		= 1,
 	.enabled_at_boot	= 0,
@@ -669,17 +673,12 @@ static void __init espresso10_audio_init(void)
 {
 #ifdef CONFIG_SND_SOC_WM8994
 	platform_device_register(&vbatt_device);
-
-	wm1811_pdata.ldo[0].enable =
-		omap_muxtbl_get_gpio_by_name("CODEC_LDO_EN");
 #endif
 }
 
 void __init omap4_espresso10_pmic_init(void)
 {
 	unsigned int board_type = omap4_espresso10_get_board_type();
-	unsigned int gpio_sys_drm_msec =
-		omap_muxtbl_get_gpio_by_name("SYS_DRM_MSEC");
 
 	/* Update oscillator information */
 	omap_pm_set_osc_lp_time(15000, 1);
@@ -719,8 +718,6 @@ void __init omap4_espresso10_pmic_init(void)
 	 * Register fixed regulator to control ldo which is used by tflash.
 	 */
 	if (system_rev >= 6) {
-		espresso10_vmmc_config.gpio =
-		omap_muxtbl_get_gpio_by_name("TF_EN");
 		platform_device_register(&espresso10_vmmc_device);
 	}
 
@@ -734,8 +731,8 @@ void __init omap4_espresso10_pmic_init(void)
 	/*
 	 * Drive MSECURE high for TWL6030 write access.
 	 */
-	gpio_request(gpio_sys_drm_msec, "SYS_DRM_MSEC");
-	gpio_direction_output(gpio_sys_drm_msec, 1);
+	gpio_request(GPIO_SYS_DRM_MSEC, "SYS_DRM_MSEC");
+	gpio_direction_output(GPIO_SYS_DRM_MSEC, 1);
 
 	if (enable_sr)
 		omap_enable_smartreflex_on_init();

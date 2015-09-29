@@ -30,12 +30,16 @@
 
 #include "board-espresso10.h"
 #include "control.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
+
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 #include <plat/clock.h>
 #include <linux/clk.h>
 #endif
+
+#define GPIO_HDMI_HPD				63
+#define GPIO_LCD_EN             	135
+#define GPIO_LVDS_nSHDN         	136
+#define GPIO_LED_BACKLIGHT_RESET	95
 
 #define ESPRESSO10_FB_RAM_SIZE		SZ_16M	/* ~1280*720*4 * 2 */
 
@@ -226,12 +230,9 @@ void __init omap4_espresso10_display_init(void)
 		/* return -ENOENT; */
 	 }
 #endif
-	espresso10_panel_data.lvds_nshdn_gpio =
-	    omap_muxtbl_get_gpio_by_name("LVDS_nSHDN");
-	espresso10_panel_data.lcd_en_gpio =
-	    omap_muxtbl_get_gpio_by_name("LCD_EN");
-	espresso10_panel_data.led_backlight_reset_gpio =
-	    omap_muxtbl_get_gpio_by_name("LED_BACKLIGHT_RESET");
+	espresso10_panel_data.lvds_nshdn_gpio = GPIO_LVDS_nSHDN;
+	espresso10_panel_data.lcd_en_gpio = GPIO_LCD_EN;
+	espresso10_panel_data.led_backlight_reset_gpio = GPIO_LED_BACKLIGHT_RESET;
 	espresso10_panel_data.backlight_gptimer_num = 10;
 	espresso10_panel_data.set_power = espresso10_lcd_set_power;
 	espresso10_panel_data.set_gptimer_idle =
@@ -259,8 +260,7 @@ void __init omap4_espresso10_display_init(void)
 	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY) {
 		/* Two DSS devices: LCD & HDMI */
 		espresso10_dss_data.num_devices = 2;
-		espresso10_hdmi_device.hpd_gpio =
-			omap_muxtbl_get_gpio_by_name("HDMI_HPD");
+		espresso10_hdmi_device.hpd_gpio = GPIO_HDMI_HPD;
 		espresso10_hdmi_mux_init();
 	} else
 		/* LCD only */

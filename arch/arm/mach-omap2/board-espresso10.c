@@ -47,11 +47,11 @@
 
 #include "board-espresso10.h"
 #include "control.h"
-#include "mux.h"
 #include "omap4-sar-layout.h"
-#include "omap_muxtbl.h"
 
 #include "sec_muxtbl.h"
+
+#include "mux.h"
 
 /* gpio to distinguish WiFi and USA-BBY
  *
@@ -200,6 +200,9 @@ static void __init espresso10_init(void)
 	omap4_espresso10_update_board_type();
 
 	omap4_espresso10_emif_init();
+
+	omap4_mux_init(NULL, NULL, OMAP_PACKAGE_CBS);
+
 	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY &&
 	    system_rev >= 7)
 		sec_muxtbl_init(SEC_MACHINE_ESPRESSO10_USA_BBY, system_rev);

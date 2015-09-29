@@ -32,8 +32,15 @@
 #include <linux/irq.h>
 
 #include "board-espresso10.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
+
+#define GPIO_FUEL_SCL      61
+#define GPIO_FUEL_SDA      62
+#define GPIO_CHG_SDA       98
+#define GPIO_CHG_SCL       99
+#define GPIO_TA_NCONNECTED 32
+#define GPIO_TA_NCHG       142
+#define GPIO_TA_EN         13
+#define GPIO_FUEL_ALERT    44
 
 #define TA_CHG_ING_N	0
 #define TA_ENABLE	1
@@ -65,9 +72,21 @@ struct smb_charger_callbacks *charger_callback;
 struct battery_manager_callbacks *batman_callback;
 
 static struct gpio charger_gpios[] = {
-	{ .flags = GPIOF_IN, .label = "TA_nCHG" },		/* TA_nCHG */
-	{ .flags = GPIOF_OUT_INIT_LOW, .label = "TA_EN" },	/* TA_EN */
-	{ .flags = GPIOF_IN, .label = "FUEL_ALERT" },
+	{
+		.flags	= GPIOF_IN,
+		.gpio	= GPIO_TA_NCHG,
+		.label	= "TA_nCHG",
+	},
+	{ 
+		.flags	= GPIOF_OUT_INIT_LOW,
+		.gpio	= GPIO_TA_EN,
+		.label	= "TA_EN",
+	},
+	{ 
+		.flags	= GPIOF_IN, 
+		.gpio	= GPIO_FUEL_ALERT, 
+		.label	= "FUEL_ALERT",
+	},
 };
 
 static irqreturn_t charger_state_isr(int irq, void *_data)
@@ -109,14 +128,8 @@ static irqreturn_t fuel_alert_isr(int irq, void *_data)
 
 static void charger_gpio_init(void)
 {
-	int i;
 	int irq, fuel_irq;
 	int ret;
-
-	for (i = 0; i < ARRAY_SIZE(charger_gpios); i++) {
-		charger_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(charger_gpios[i].label);
-	}
 
 	gpio_request_array(charger_gpios, ARRAY_SIZE(charger_gpios));
 
@@ -147,6 +160,8 @@ static void charger_enble_set(int state)
 }
 
 static struct i2c_gpio_platform_data espresso10_gpio_i2c5_pdata = {
+	.sda_pin = GPIO_CHG_SDA,
+	.scl_pin = GPIO_CHG_SCL,
 	.udelay = 10,
 	.timeout = 0,
 };
@@ -160,6 +175,8 @@ static struct platform_device espresso10_gpio_i2c5_device = {
 };
 
 static struct i2c_gpio_platform_data espresso10_gpio_i2c7_pdata = {
+	.sda_pin = GPIO_FUEL_SDA,
+	.scl_pin = GPIO_FUEL_SCL,
 	.udelay = 3,
 	.timeout = 0,
 };
@@ -171,21 +188,6 @@ static struct platform_device espresso10_gpio_i2c7_device = {
 		.platform_data = &espresso10_gpio_i2c7_pdata,
 	},
 };
-
-static void __init espresso10_gpio_i2c_init(void)
-{
-	/* gpio-i2c 5 */
-	espresso10_gpio_i2c5_pdata.sda_pin =
-		omap_muxtbl_get_gpio_by_name("CHG_SDA_1.8V");
-	espresso10_gpio_i2c5_pdata.scl_pin =
-		omap_muxtbl_get_gpio_by_name("CHG_SCL_1.8V");
-
-	/* gpio-i2c 7 */
-	espresso10_gpio_i2c7_pdata.sda_pin =
-		omap_muxtbl_get_gpio_by_name("FUEL_SDA_1.8V");
-	espresso10_gpio_i2c7_pdata.scl_pin =
-		omap_muxtbl_get_gpio_by_name("FUEL_SCL_1.8V");
-}
 
 static void smb347_charger_register_callbacks(
 		struct smb_charger_callbacks *ptr)
@@ -338,6 +340,7 @@ static void battery_manager_register_callbacks(
 }
 
 static struct batman_platform_data battery_manager_pdata = {
+	.ta_gpio = GPIO_TA_NCONNECTED,
 	.get_fuel_value = read_fuel_value,
 	.set_charger_state = set_chg_state,
 	.set_charger_en = charger_enble_set,
@@ -397,7 +400,6 @@ void __init omap4_espresso10_charger_init(void)
 	unsigned int board_type = omap4_espresso10_get_board_type();
 
 	charger_gpio_init();
-	espresso10_gpio_i2c_init();
 	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY && bootmode == 5) {
 		battery_manager_pdata.high_block_temp = BB_HIGH_BLOCK_TEMP;
 		battery_manager_pdata.high_recover_temp = BB_HIGH_RECOVER_TEMP;
@@ -406,9 +408,6 @@ void __init omap4_espresso10_charger_init(void)
 	}
 
 	battery_manager_pdata.bootmode = bootmode;
-
-	battery_manager_pdata.ta_gpio =
-			omap_muxtbl_get_gpio_by_name("TA_nCONNECTED");
 
 	if (!gpio_is_valid(battery_manager_pdata.ta_gpio))
 		gpio_request(battery_manager_pdata.ta_gpio, "TA_nCONNECTED");
