@@ -5,11 +5,11 @@ struct request;
 struct task_struct;
 
 struct mmc_blk_request {
-	struct mmc_request	mrq;
-	struct mmc_command	sbc;
-	struct mmc_command	cmd;
-	struct mmc_command	stop;
-	struct mmc_data		data;
+	struct mmc_request      mrq;
+	struct mmc_command      sbc;
+	struct mmc_command      cmd;
+	struct mmc_command      stop;
+	struct mmc_data         data;
 };
 
 struct mmc_queue_req {
@@ -23,16 +23,17 @@ struct mmc_queue_req {
 };
 
 struct mmc_queue {
-	struct mmc_card		*card;
-	struct task_struct	*thread;
-	struct semaphore	thread_sem;
-	unsigned int		flags;
-	int			(*issue_fn)(struct mmc_queue *, struct request *);
-	void			*data;
-	struct request_queue	*queue;
-	struct mmc_queue_req	mqrq[2];
-	struct mmc_queue_req	*mqrq_cur;
-	struct mmc_queue_req	*mqrq_prev;
+	struct mmc_card         *card;
+	struct task_struct      *thread;
+	struct semaphore        thread_sem;
+	unsigned int            flags;
+	int                     (*issue_fn)(struct mmc_queue *,
+						struct request *);
+	void                    *data;
+	struct request_queue    *queue;
+	struct mmc_queue_req    mqrq[2];
+	struct mmc_queue_req    *mqrq_cur;
+	struct mmc_queue_req    *mqrq_prev;
 };
 
 extern int mmc_init_queue(struct mmc_queue *, struct mmc_card *, spinlock_t *,
