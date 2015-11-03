@@ -55,7 +55,6 @@ static struct ramoops_context {
 	void *virt_addr;
 	phys_addr_t phys_addr;
 	unsigned long size;
-	int dump_oops;
 	int count;
 	int max_count;
 } oops_cxt;
@@ -81,7 +80,7 @@ static void ramoops_do_dump(struct kmsg_dumper *dumper,
 		return;
 
 	/* Only dump oopses if dump_oops is set */
-	if (reason == KMSG_DUMP_OOPS && !cxt->dump_oops)
+	if (reason == KMSG_DUMP_OOPS && !dump_oops)
 		return;
 
 	buf = cxt->virt_addr + (cxt->count * RECORD_SIZE);
@@ -129,7 +128,6 @@ static int __init ramoops_probe(struct platform_device *pdev)
 	cxt->count = 0;
 	cxt->size = pdata->mem_size;
 	cxt->phys_addr = pdata->mem_address;
-	cxt->dump_oops = pdata->dump_oops;
 
 	if (!request_mem_region(cxt->phys_addr, cxt->size, "ramoops")) {
 		pr_err("request mem region failed\n");
@@ -196,7 +194,6 @@ static int __init ramoops_init(void)
 			return -ENOMEM;
 		dummy_data->mem_size = mem_size;
 		dummy_data->mem_address = mem_address;
-		dummy_data->dump_oops = dump_oops;
 		dummy = platform_create_bundle(&ramoops_driver, ramoops_probe,
 			NULL, 0, dummy_data,
 			sizeof(struct ramoops_platform_data));
