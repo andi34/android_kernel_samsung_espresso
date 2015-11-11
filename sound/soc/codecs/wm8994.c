@@ -3428,9 +3428,7 @@ static void wm8958_default_micdet(u16 status, void *data)
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
 	int report;
 
-	dev_dbg(codec->dev, "MICDET %x\n", status);
-
-	/* Either nothing present or just starting detection */
+	/* If nothing present then clear our statuses */
 	if (!(status & WM8958_MICD_STS)) {
 		if (!wm8994->jackdet) {
 			/* If nothing present then clear our statuses */
