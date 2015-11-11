@@ -152,6 +152,10 @@ static void wm8958_micd_set_rate(struct snd_soc_codec *codec)
 	val = rates[best].start << WM8958_MICD_BIAS_STARTTIME_SHIFT
 		| rates[best].rate << WM8958_MICD_RATE_SHIFT;
 
+	dev_dbg(codec->dev, "MICD rate %d,%d for %dHz %s\n",
+		rates[best].start, rates[best].rate, sysclk,
+		idle ? "idle" : "active");
+
 	snd_soc_update_bits(codec, WM8958_MIC_DETECT_1,
 			    WM8958_MICD_BIAS_STARTTIME_MASK |
 			    WM8958_MICD_RATE_MASK, val);
@@ -2158,6 +2162,7 @@ static int _wm8994_set_fll(struct snd_soc_codec *codec, int id, int src,
 	u16 reg, clk1, aif_reg, aif_src;
 	unsigned long timeout;
 	bool was_enabled;
+	dev_info(codec->dev, "%s ++\n", __func__);
 
 	switch (id) {
 	case WM8994_FLL1:
@@ -2320,7 +2325,7 @@ out:
 	wm8994->fll[id].src = src;
 
 	configure_clock(codec);
-
+	dev_info(codec->dev, "%s --\n", __func__);
 	return 0;
 }
 
@@ -3951,10 +3956,11 @@ static int wm8994_codec_probe(struct snd_soc_codec *codec)
 						   IRQF_TRIGGER_RISING,
 						   "Mic detect",
 						   wm8994);
-			if (ret != 0)
+			if (ret != 0) {
 				dev_warn(codec->dev,
 					 "Failed to request Mic detect IRQ: %d\n",
 					 ret);
+			}
 		}
 	}
 
