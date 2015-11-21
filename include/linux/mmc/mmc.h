@@ -291,16 +291,11 @@ struct _mmc_csd {
 #define EXT_CSD_ERASED_MEM_CONT		181	/* RO */
 #define EXT_CSD_BUS_WIDTH		183	/* R/W */
 #define EXT_CSD_HS_TIMING		185	/* R/W */
-#define EXT_CSD_POWER_CLASS		187	/* R/W */
 #define EXT_CSD_REV			192	/* RO */
 #define EXT_CSD_STRUCTURE		194	/* RO */
 #define EXT_CSD_CARD_TYPE		196	/* RO */
 #define EXT_CSD_OUT_OF_INTERRUPT_TIME	198	/* RO */
 #define EXT_CSD_PART_SWITCH_TIME        199     /* RO */
-#define EXT_CSD_PWR_CL_52_195		200	/* RO */
-#define EXT_CSD_PWR_CL_26_195		201	/* RO */
-#define EXT_CSD_PWR_CL_52_360		202	/* RO */
-#define EXT_CSD_PWR_CL_26_360		203	/* RO */
 #define EXT_CSD_SEC_CNT			212	/* RO, 4 bytes */
 #define EXT_CSD_S_A_TIMEOUT		217	/* RO */
 #define EXT_CSD_REL_WR_SEC_C		222	/* RO */
@@ -312,10 +307,6 @@ struct _mmc_csd {
 #define EXT_CSD_SEC_ERASE_MULT		230	/* RO */
 #define EXT_CSD_SEC_FEATURE_SUPPORT	231	/* RO */
 #define EXT_CSD_TRIM_MULT		232	/* RO */
-#define EXT_CSD_PWR_CL_200_195		236	/* RO */
-#define EXT_CSD_PWR_CL_200_360		237	/* RO */
-#define EXT_CSD_PWR_CL_DDR_52_195	238	/* RO */
-#define EXT_CSD_PWR_CL_DDR_52_360	239	/* RO */
 #define EXT_CSD_POWER_OFF_LONG_TIME	247	/* RO */
 #define EXT_CSD_GENERIC_CMD6_TIME	248	/* RO */
 #define EXT_CSD_CACHE_SIZE		249	/* RO, 4 bytes */
@@ -365,11 +356,6 @@ struct _mmc_csd {
 #define EXT_CSD_POWER_ON		1
 #define EXT_CSD_POWER_OFF_SHORT		2
 #define EXT_CSD_POWER_OFF_LONG		3
-
-#define EXT_CSD_PWR_CL_8BIT_MASK	0xF0	/* 8 bit PWR CLS */
-#define EXT_CSD_PWR_CL_4BIT_MASK	0x0F	/* 8 bit PWR CLS */
-#define EXT_CSD_PWR_CL_8BIT_SHIFT	4
-#define EXT_CSD_PWR_CL_4BIT_SHIFT	0
 
 #define EXT_CSD_PACKED_EVENT_EN	(1 << 3)
 
