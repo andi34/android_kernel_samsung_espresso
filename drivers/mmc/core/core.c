@@ -210,7 +210,7 @@ static void __mmc_start_req(struct mmc_host *host, struct mmc_request *mrq)
 }
 
 static void mmc_wait_for_req_done(struct mmc_host *host,
-				struct mmc_request *mrq)
+				  struct mmc_request *mrq)
 {
 	wait_for_completion(&mrq->completion);
 }
@@ -220,14 +220,14 @@ static void mmc_wait_for_req_done(struct mmc_host *host,
  *	@host: MMC host to prepare command
  *	@mrq: MMC request to prepare for
  *	@is_first_req: true if there is no previous started request
- *			that may run in parellel to this call, otherwise false
+ *                     that may run in parellel to this call, otherwise false
  *
  *	mmc_pre_req() is called in prior to mmc_start_req() to let
  *	host prepare for the new request. Preparation of a request may be
  *	performed while another request is running on the host.
  */
 static void mmc_pre_req(struct mmc_host *host, struct mmc_request *mrq,
-		bool is_first_req)
+		 bool is_first_req)
 {
 	if (host->ops->pre_req)
 		host->ops->pre_req(host, mrq, is_first_req);
@@ -243,7 +243,7 @@ static void mmc_pre_req(struct mmc_host *host, struct mmc_request *mrq,
  *	a request may be performed while another reuqest is running.
  */
 static void mmc_post_req(struct mmc_host *host, struct mmc_request *mrq,
-			int err)
+			 int err)
 {
 	if (host->ops->post_req)
 		host->ops->post_req(host, mrq, err);
@@ -260,13 +260,13 @@ static void mmc_post_req(struct mmc_host *host, struct mmc_request *mrq,
  *	of that request and start the new one and return.
  *	Does not wait for the new request to complete.
  *
- *	Returns the completed request, NULL in case of none completed.
+ *      Returns the completed request, NULL in case of none completed.
  *	Wait for the an ongoing request (previoulsy started) to complete and
  *	return the completed request. If there is no ongoing request, NULL
  *	is returned without waiting. NULL is not an error condition.
  */
 struct mmc_async_req *mmc_start_req(struct mmc_host *host,
-				struct mmc_async_req *areq, int *error)
+				    struct mmc_async_req *areq, int *error)
 {
 	int err = 0;
 	struct mmc_async_req *data = host->areq;
@@ -295,7 +295,7 @@ struct mmc_async_req *mmc_start_req(struct mmc_host *host,
 		mmc_post_req(host, host->areq->mrq, 0);
 
 	host->areq = areq;
-out:
+ out:
 	if (error)
 		*error = err;
 	return data;
@@ -313,10 +313,9 @@ EXPORT_SYMBOL(mmc_start_req);
  */
 void mmc_wait_for_req(struct mmc_host *host, struct mmc_request *mrq)
 {
-	 __mmc_start_req(host, mrq);
+	__mmc_start_req(host, mrq);
 	mmc_wait_for_req_done(host, mrq);
 }
-
 EXPORT_SYMBOL(mmc_wait_for_req);
 
 /**
@@ -1669,9 +1668,9 @@ EXPORT_SYMBOL(mmc_can_trim);
 int mmc_can_discard(struct mmc_card *card)
 {
 	/*
-	* As there's no way to detect the discard support bit at v4.5
-	* use the s/w feature support filed.
-	*/
+	 * As there's no way to detect the discard support bit at v4.5
+	 * use the s/w feature support filed.
+	 */
 	if (card->ext_csd.feature_support & MMC_DISCARD_FEATURE)
 		return 1;
 	return 0;
@@ -1698,7 +1697,7 @@ int mmc_erase_group_aligned(struct mmc_card *card, unsigned int from,
 EXPORT_SYMBOL(mmc_erase_group_aligned);
 
 static unsigned int mmc_do_calc_max_discard(struct mmc_card *card,
-						unsigned int arg)
+					    unsigned int arg)
 {
 	struct mmc_host *host = card->host;
 	unsigned int max_discard, x, y, qty = 0, max_qty, timeout;
@@ -1857,6 +1856,7 @@ static int mmc_do_hw_reset(struct mmc_host *host, int check)
 	host->ios.bus_width = MMC_BUS_WIDTH_1;
 	host->ios.timing = MMC_TIMING_LEGACY;
 	mmc_set_ios(host);
+
 	mmc_host_clk_release(host);
 
 	return host->bus_ops->power_restore(host);
