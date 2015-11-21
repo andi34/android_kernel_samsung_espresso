@@ -758,7 +758,7 @@ static int mmc_blk_issue_discard_rq(struct mmc_queue *mq, struct request *req)
 	struct mmc_blk_data *md = mq->data;
 	struct mmc_card *card = md->queue.card;
 	unsigned int from, nr, arg;
-	int err = 0, type = MMC_BLK_DISCARD;
+	int err = 0;
 
 	if (!mmc_can_erase(card)) {
 		err = -EOPNOTSUPP;
@@ -774,7 +774,6 @@ static int mmc_blk_issue_discard_rq(struct mmc_queue *mq, struct request *req)
 		arg = MMC_TRIM_ARG;
 	else
 		arg = MMC_ERASE_ARG;
-retry:
 	if (card->quirks & MMC_QUIRK_INAND_CMD38) {
 		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 				 INAND_CMD38_ARG_EXT_CSD,
@@ -787,10 +786,6 @@ retry:
 	}
 	err = mmc_erase(card, from, nr, arg);
 out:
-	if (err == -EIO && !mmc_blk_reset(md, card->host, type))
-		goto retry;
-	if (!err)
-		mmc_blk_reset_success(md, type);
 	spin_lock_irq(&md->lock);
 	__blk_end_request(req, err, blk_rq_bytes(req));
 	spin_unlock_irq(&md->lock);
@@ -804,7 +799,7 @@ static int mmc_blk_issue_secdiscard_rq(struct mmc_queue *mq,
 	struct mmc_blk_data *md = mq->data;
 	struct mmc_card *card = md->queue.card;
 	unsigned int from, nr, arg;
-	int err = 0, type = MMC_BLK_SECDISCARD;
+	int err = 0;
 
 	if (!mmc_can_secure_erase_trim(card)) {
 		err = -EOPNOTSUPP;
@@ -818,7 +813,7 @@ static int mmc_blk_issue_secdiscard_rq(struct mmc_queue *mq,
 		arg = MMC_SECURE_TRIM1_ARG;
 	else
 		arg = MMC_SECURE_ERASE_ARG;
-retry:
+
 	if (card->quirks & MMC_QUIRK_INAND_CMD38) {
 		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 				 INAND_CMD38_ARG_EXT_CSD,
@@ -842,10 +837,6 @@ retry:
 		err = mmc_erase(card, from, nr, MMC_SECURE_TRIM2_ARG);
 	}
 out:
-	if (err == -EIO && !mmc_blk_reset(md, card->host, type))
-		goto retry;
-	if (!err)
-		mmc_blk_reset_success(md, type);
 	spin_lock_irq(&md->lock);
 	__blk_end_request(req, err, blk_rq_bytes(req));
 	spin_unlock_irq(&md->lock);
@@ -918,8 +909,7 @@ static int mmc_blk_err_check(struct mmc_card *card,
 	 * stop.error indicates a problem with the stop command.  Data
 	 * may have been transferred, or may still be transferring.
 	 */
-	if (brq->sbc.error || brq->cmd.error || brq->stop.error ||
-	    brq->data.error) {
+	if (brq->sbc.error || brq->cmd.error || brq->stop.error) {
 		switch (mmc_blk_cmd_recovery(card, req, brq, &ecc_err)) {
 		case ERR_RETRY:
 			return MMC_BLK_RETRY;
@@ -1189,7 +1179,6 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 			/*
 			 * A block was successfully transferred.
 			 */
-			mmc_blk_reset_success(md, type);
 			spin_lock_irq(&md->lock);
 			ret = __blk_end_request(req, 0,
 						brq->data.bytes_xfered);
@@ -1200,6 +1189,12 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 			 * were returned by the host controller, it's a bug.
 			 */
 			if (status == MMC_BLK_SUCCESS && ret) {
+				/*
+				 * The blk_end_request has returned non zero
+				 * even though all data is transfered and no
+				 * erros returned by host.
+				 * If this happen it's a bug.
+				 */
 				printk(KERN_ERR "%s BUG rq_tot %d d_xfer %d\n",
 					__func__, blk_rq_bytes(req),
 					brq->data.bytes_xfered);
