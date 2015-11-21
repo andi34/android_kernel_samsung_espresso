@@ -121,13 +121,13 @@ struct mmc_data {
 };
 
 struct mmc_request {
-	struct mmc_command	*sbc;		/* SET_BLOCK_COUNT  */
+	struct mmc_command	*sbc;		/* SET_BLOCK_COUNT for multiblock */
 	struct mmc_command	*cmd;
 	struct mmc_data		*data;
 	struct mmc_command	*stop;
 
 	struct completion	completion;
-	void			(*done)(struct mmc_request *);
+	void			(*done)(struct mmc_request *);/* completion function */
 };
 
 struct mmc_host;
@@ -146,7 +146,7 @@ extern int mmc_switch(struct mmc_card *, u8, u8, u8, unsigned int);
 #define MMC_ERASE_ARG		0x00000000
 #define MMC_SECURE_ERASE_ARG	0x80000000
 #define MMC_TRIM_ARG		0x00000001
-#define MMC_DISCARD_ARG                0x00000003
+#define MMC_DISCARD_ARG		0x00000003
 #define MMC_SECURE_TRIM1_ARG	0x80000001
 #define MMC_SECURE_TRIM2_ARG	0x80008000
 

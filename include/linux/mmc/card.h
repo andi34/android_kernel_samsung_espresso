@@ -51,7 +51,6 @@ struct mmc_ext_csd {
 	u8			rel_sectors;
 	u8			rel_param;
 	u8			part_config;
-	u8			boot_part_prot;
 	u8			rst_n_function;
 	u8			cache_ctrl;
 	u8			max_packed_writes;
@@ -87,8 +86,9 @@ struct mmc_ext_csd {
 	u8			raw_sec_feature_support;/* 231 */
 	u8			raw_trim_mult;		/* 232 */
 	u8			raw_sectors[4];		/* 212 - 4 bytes */
+
 	unsigned int            feature_support;
-#define MMC_DISCARD_FEATURE    BIT(0)                  /* CMD38 feature */
+#define MMC_DISCARD_FEATURE	BIT(0)                  /* CMD38 feature */
 };
 
 struct sd_scr {
@@ -189,7 +189,7 @@ struct mmc_card {
 #define MMC_STATE_HIGHSPEED_DDR (1<<4)		/* card is in high speed mode */
 #define MMC_STATE_ULTRAHIGHSPEED (1<<5)		/* card is in ultra high speed mode */
 #define MMC_CARD_SDXC		(1<<6)		/* card is SDXC */
-#define MMC_STATE_INSERTED	(1<<7)		/* card present in the slot */
+#define MMC_STATE_INSERTED      (1<<7)          /* card present in the slot */
 	unsigned int		quirks; 	/* card quirks */
 #define MMC_QUIRK_LENIENT_FN0	(1<<0)		/* allow SDIO FN0 writes outside of the VS CCCR range */
 #define MMC_QUIRK_BLKSZ_FOR_BYTE_MODE (1<<1)	/* use func->cur_blksize */
@@ -327,7 +327,7 @@ static inline void __maybe_unused remove_quirk(struct mmc_card *card, int data)
 #define mmc_card_sdio(c)	((c)->type == MMC_TYPE_SDIO)
 
 #define mmc_card_present(c)	((c)->state & MMC_STATE_PRESENT)
-#define mmc_card_inserted(c)	((c)->state & MMC_STATE_INSERTED)
+#define mmc_card_inserted(c)     ((c)->state & MMC_STATE_INSERTED)
 #define mmc_card_readonly(c)	((c)->state & MMC_STATE_READONLY)
 #define mmc_card_highspeed(c)	((c)->state & MMC_STATE_HIGHSPEED)
 #define mmc_card_blockaddr(c)	((c)->state & MMC_STATE_BLOCKADDR)

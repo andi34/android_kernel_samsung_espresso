@@ -112,7 +112,7 @@ struct mmc_host_ops {
 	 * order to support double buffering of requests (prepare one
 	 * request while another request is active).
 	 */
-	 void	(*post_req)(struct mmc_host *host, struct mmc_request *req,
+	void	(*post_req)(struct mmc_host *host, struct mmc_request *req,
 			    int err);
 	void	(*pre_req)(struct mmc_host *host, struct mmc_request *req,
 			   bool is_first_req);
@@ -316,8 +316,6 @@ struct mmc_host {
 
 	struct dentry		*debugfs_root;
 
-	struct mmc_async_req	*areq;		/* active async req */
-
 #ifdef CONFIG_MMC_EMBEDDED_SDIO
 	struct {
 		struct sdio_cis			*cis;
@@ -326,6 +324,8 @@ struct mmc_host {
 		int				num_funcs;
 	} embedded_sdio_data;
 #endif
+
+	struct mmc_async_req	*areq;		/* active async req */
 
 	unsigned long		private[0] ____cacheline_aligned;
 };
