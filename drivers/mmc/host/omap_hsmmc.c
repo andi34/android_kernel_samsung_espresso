@@ -1224,18 +1224,6 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 	 * OMAP4 ES2 and greater has an updated reset logic.
 	 * Monitor a 0->1 transition first
 	 */
-#ifdef CONFIG_WLAN_SDIO
-	if (mmc_slot(host).features & HSMMC_HAS_UPDATED_RESET) {
-		while ((!(OMAP_HSMMC_READ(host->base, SYSCTL) & bit))
-					&& (i++ < limit))
-			cpu_relax();
-	}
-	i = 0;
-
-	while ((OMAP_HSMMC_READ(host->base, SYSCTL) & bit) &&
-		(i++ < limit))
-		cpu_relax();
-#else
 	if (mmc_slot(host).features & HSMMC_HAS_UPDATED_RESET) {
 		while ((!(OMAP_HSMMC_READ(host, SYSCTL) & bit))
 						&& (i++ < 200))
@@ -1245,7 +1233,6 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 	while ((OMAP_HSMMC_READ(host, SYSCTL) & bit) &&
 		(i++ < 200))
 		udelay(10);
-#endif
 
 	if (OMAP_HSMMC_READ(host->base, SYSCTL) & bit)
 		dev_err(mmc_dev(host->mmc),
