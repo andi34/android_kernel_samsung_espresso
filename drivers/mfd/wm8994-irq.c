@@ -217,8 +217,6 @@ static irqreturn_t wm8994_irq_thread(int irq, void *data)
 	unsigned int i;
 	u16 status[WM8994_NUM_IRQ_REGS];
 	int ret;
-	unsigned long irqflags;
-	struct wm8994_pdata *pdata = wm8994->dev->platform_data;
 
 	ret = wm8994_bulk_read(wm8994, WM8994_INTERRUPT_STATUS_1,
 			       WM8994_NUM_IRQ_REGS, status);
@@ -253,6 +251,8 @@ static irqreturn_t wm8994_irq_thread(int irq, void *data)
 int wm8994_irq_init(struct wm8994 *wm8994)
 {
 	int i, cur_irq, ret;
+	unsigned long irqflags;
+	struct wm8994_pdata *pdata = wm8994->dev->platform_data;
 
 	mutex_init(&wm8994->irq_lock);
 
