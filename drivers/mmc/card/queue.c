@@ -316,7 +316,6 @@ void mmc_cleanup_queue(struct mmc_queue *mq)
 
 	kfree(mqrq_cur->bounce_sg);
 	mqrq_cur->bounce_sg = NULL;
- 	mq->bounce_sg = NULL;
 
 	kfree(mqrq_cur->sg);
 	mqrq_cur->sg = NULL;
