@@ -17,6 +17,5 @@
 
 #include "../../sec_debug.h"
 #include "../../sec_gaf.h"
-#include "../../sec_getlog.h"
 
 #endif /* __SEC_ADDON_H__ */
