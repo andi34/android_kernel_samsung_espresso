@@ -1155,7 +1155,6 @@ static int mmc_blk_cmd_err(struct mmc_blk_data *md, struct mmc_card *card,
 			spin_unlock_irq(&md->lock);
 		}
 	} else {
-		spin_lock_irq(&md->lock);
 			spin_lock_irq(&md->lock);
 			ret = __blk_end_request(req, 0, brq->data.bytes_xfered);
 			spin_unlock_irq(&md->lock);
