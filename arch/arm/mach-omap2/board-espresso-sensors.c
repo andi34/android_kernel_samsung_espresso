@@ -201,15 +201,11 @@ void __init omap4_espresso_sensors_init(void)
 
 	gp2a_pdata.p_out = sensors_gpios[NUM_PS_VOUT].gpio;
 
-	pr_info("%s: hw rev = %d, board type = %d\n",
-		__func__, system_rev, omap4_espresso_get_board_type());
-
 	if (system_rev < 7) {
 		i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
 			ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
 	} else {
-		if (omap4_espresso_get_board_type()
-			== SEC_MACHINE_ESPRESSO) {
+		if (board_has_modem()) {
 			i2c_register_board_info(4,
 				espresso_sensors_i2c4_boardinfo_rf,
 				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_rf));

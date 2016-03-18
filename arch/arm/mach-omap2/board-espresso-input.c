@@ -358,11 +358,9 @@ static void espresso_set_dvfs(bool on)
 
 void __init omap4_espresso_input_init(void)
 {
-	u32 boardtype = omap4_espresso_get_board_type();
-
-	if (boardtype == SEC_MACHINE_ESPRESSO_WIFI)
+	if (!board_has_modem() && !board_is_bestbuy_variant())
 		espresso_ts_pdata.model_name = "P3110";
-	else if (boardtype == SEC_MACHINE_ESPRESSO_USA_BBY)
+	else if (board_is_bestbuy_variant())
 		espresso_ts_pdata.model_name = "P3113";
 	else
 		espresso_ts_pdata.model_name = "P3100";

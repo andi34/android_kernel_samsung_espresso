@@ -325,11 +325,9 @@ void omap4_espresso10_tsp_ta_detect(int cable_type)
 
 void __init omap4_espresso10_input_init(void)
 {
-	u32 boardtype = omap4_espresso10_get_board_type();
-
-	if (boardtype == SEC_MACHINE_ESPRESSO10_WIFI)
+	if (!board_has_modem() && !board_is_bestbuy_variant())
 		espresso10_ts_pdata.model_name = "P5110";
-	else if (boardtype == SEC_MACHINE_ESPRESSO10_USA_BBY)
+	else if (board_is_bestbuy_variant())
 		espresso10_ts_pdata.model_name = "P5113";
 	else
 		espresso10_ts_pdata.model_name = "P5100";
