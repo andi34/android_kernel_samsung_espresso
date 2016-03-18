@@ -194,7 +194,6 @@ void __init omap4_espresso10_display_init(void)
 {
 	struct ltn101al03_panel_data *panel;
 	int ret, i;
-	u8 board_type;
 
 	/* Default setting vlaue for SEC panel*/
 	int platform_brightness[] = {
@@ -255,8 +254,7 @@ void __init omap4_espresso10_display_init(void)
 
 	espresso10_lcd_device.data = panel;
 
-	board_type = omap4_espresso10_get_board_type();
-	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY) {
+	if (board_is_bestbuy_variant()) {
 		/* Two DSS devices: LCD & HDMI */
 		espresso10_dss_data.num_devices = 2;
 		espresso10_hdmi_device.hpd_gpio =

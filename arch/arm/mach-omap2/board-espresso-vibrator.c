@@ -157,10 +157,8 @@ err_to_dev_reg:
 int __init omap4_espresso_vibrator_init(void)
 {
 	int ret = 0, i;
-	unsigned int boardtype = omap4_espresso_get_board_type();
 
-	if (boardtype == SEC_MACHINE_ESPRESSO_WIFI ||
-	    boardtype == SEC_MACHINE_ESPRESSO_USA_BBY) {
+	if (!board_has_modem()) {
 		omap_vibrator_none_pads_cfg_mux();
 		return 0;
 	}

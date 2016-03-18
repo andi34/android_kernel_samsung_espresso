@@ -123,41 +123,81 @@ static struct omap_musb_board_data musb_board_data = {
 	.power		= 500,
 };
 
-#define CARRIER_WIFI_ONLY	"wifi-only"
+/* Board identification */
 
-static unsigned int board_type = SEC_MACHINE_ESPRESSO10;
+static bool _board_has_modem = true;
+static bool _board_is_espresso10 = true;
+static bool _board_is_bestbuy_variant = false;
 
-static int __init espresso10_set_board_type(char *str)
+/*
+ * Sets the board type
+ */
+static __init int setup_board_type(char *str)
 {
-	if (!strncmp(str, CARRIER_WIFI_ONLY, strlen(CARRIER_WIFI_ONLY)))
-		board_type = SEC_MACHINE_ESPRESSO10_WIFI;
+	int lcd_id;
+	if (kstrtoint(str, 0, &lcd_id)) {
+		pr_err("************************************************\n");
+		pr_err("Cannot parse lcd_panel_id command line parameter\n");
+		pr_err("Failed to detect board type, assuming espresso10\n");
+		pr_err("************************************************\n");
+		return 1;
+	}
+
+	/*
+	 * P51xx bootloaders pass lcd_id=1 and on some older lcd_id=0,
+	 * everything else is P31xx.
+	 */
+	if (lcd_id > 1)
+		_board_is_espresso10 = false;
 
 	return 0;
 }
-__setup("androidboot.carrier=", espresso10_set_board_type);
+early_param("lcd_panel_id", setup_board_type);
 
-static void __init omap4_espresso10_update_board_type(void)
+/*
+ * Sets whether the device is a wifi-only variant
+ */
+static int __init espresso_set_subtype(char *str)
 {
-	const unsigned int gpio_hw_rev4 = GPIO_HW_REV4;
+	#define CARRIER_WIFI_ONLY "wifi-only"
 
-	if (system_rev < 6)
-		return;
+	if (!strncmp(str, CARRIER_WIFI_ONLY, strlen(CARRIER_WIFI_ONLY)))
+		_board_has_modem = false;
 
-	/* because omap4_mux_init is not called when this function is
-	 * called, padconf reg must be configured by low-level function. */
-	omap_writew(OMAP_MUX_MODE3 | OMAP_PIN_INPUT,
-		    OMAP4_CTRL_MODULE_PAD_CORE_MUX_PBASE +
-		    OMAP4_CTRL_MODULE_PAD_GPMC_A17_OFFSET);
+	return 0;
+}
+__setup("androidboot.carrier=", espresso_set_subtype);
 
-	gpio_request(gpio_hw_rev4, "HW_REV4");
-	if (gpio_get_value(gpio_hw_rev4))
-		board_type = SEC_MACHINE_ESPRESSO10_USA_BBY;
+/*
+ * Sets whether the device is a Best Buy wifi-only variant
+ */
+static int __init espresso_set_vendor_type(char *str)
+{
+	unsigned int vendor;
+
+	if (kstrtouint(str, 0, &vendor))
+		return 0;
+
+	if (vendor == 0)
+		_board_is_bestbuy_variant = true;
+
+	return 0;
+}
+__setup("sec_vendor=", espresso_set_vendor_type);
+
+bool board_is_espresso10(void) {
+	return _board_is_espresso10;
 }
 
-unsigned int __init omap4_espresso10_get_board_type(void)
-{
-	return board_type;
+bool board_has_modem(void) {
+	return _board_has_modem;
 }
+
+bool board_is_bestbuy_variant(void) {
+	return _board_is_bestbuy_variant;
+}
+
+/* Board identification end */
 
 static void espresso10_power_off_charger(void)
 {
@@ -188,14 +228,26 @@ static void __init omap4_espresso10_reboot_init(void)
 		register_reboot_notifier(&espresso10_reboot_notifier);
 }
 
+static void __init espresso10_update_board_type(void)
+{
+	/* because omap4_mux_init is not called when this function is
+	 * called, padconf reg must be configured by low-level function. */
+	omap_writew(OMAP_MUX_MODE3 | OMAP_PIN_INPUT,
+		    OMAP4_CTRL_MODULE_PAD_CORE_MUX_PBASE +
+		    OMAP4_CTRL_MODULE_PAD_GPMC_A17_OFFSET);
+
+	gpio_request(GPIO_HW_REV4, "HW_REV4");
+	if (gpio_get_value(GPIO_HW_REV4))
+		_board_is_bestbuy_variant = true;
+}
+
 static void __init espresso10_init(void)
 {
 	sec_common_init_early();
-	omap4_espresso10_update_board_type();
+	espresso10_update_board_type();
 
 	omap4_espresso10_emif_init();
-	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY &&
-	    system_rev >= 7)
+	if (board_is_bestbuy_variant() && system_rev >= 7)
 		sec_muxtbl_init(SEC_MACHINE_ESPRESSO10_USA_BBY, system_rev);
 	sec_muxtbl_init(SEC_MACHINE_ESPRESSO10, system_rev);
 

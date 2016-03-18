@@ -303,9 +303,7 @@ void __init omap4_espresso10_serial_init(void)
 
 int __init omap4_espresso10_serial_late_init(void)
 {
-	unsigned int boardtype = omap4_espresso10_get_board_type();
-
-	if (system_rev > 6 && boardtype == SEC_MACHINE_ESPRESSO10)
+	if (system_rev > 6 && board_has_modem())
 		omap_serial_none_pads_cfg_mux();
 
 	return 0;
