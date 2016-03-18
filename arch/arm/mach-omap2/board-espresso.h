@@ -27,6 +27,10 @@ enum espresso_adc_ch {
 	EAR_ADC_35,	/* Earjack detection */
 };
 
+bool board_is_espresso10(void);
+bool board_has_modem(void);
+bool board_is_bestbuy_variant(void);
+
 /** @category common */
 unsigned int omap4_espresso_get_board_type(void);
 

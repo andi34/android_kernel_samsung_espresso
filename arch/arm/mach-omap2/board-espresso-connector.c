@@ -1247,11 +1247,10 @@ switch_dev_fail:
 
 int __init omap4_espresso_connector_late_init(void)
 {
-	unsigned int board_type = omap4_espresso_get_board_type();
-
-	if (system_rev < 7 || board_type != SEC_MACHINE_ESPRESSO)
+	if (system_rev < 7 || (!board_has_modem())) {
 		if (gpio_get_value(connector_gpios[GPIO_JIG_ON].gpio))
 			uart_set_l3_cstr(true);
+	}
 
 	return 0;
 }

@@ -709,7 +709,6 @@ static void __init espresso10_audio_init(void)
 
 void __init omap4_espresso10_pmic_init(void)
 {
-	unsigned int board_type = omap4_espresso10_get_board_type();
 	unsigned int gpio_sys_drm_msec =
 		omap_muxtbl_get_gpio_by_name("SYS_DRM_MSEC");
 
@@ -760,7 +759,7 @@ void __init omap4_espresso10_pmic_init(void)
 	 * only best buy Wi-Fi verstion support MHL from rev0.4
 	 * Set lodln regulator as VDAC regulator which is used by MHL.
 	 */
-	if (board_type == SEC_MACHINE_ESPRESSO10_USA_BBY && system_rev >= 7)
+	if (board_is_bestbuy_variant() && system_rev >= 7)
 		espresso10_twl6032_pdata_rev03.ldoln = &espresso10_vdac;
 
 

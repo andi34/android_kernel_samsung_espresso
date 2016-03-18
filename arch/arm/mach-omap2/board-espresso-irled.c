@@ -312,9 +312,7 @@ int __init omap4_espresso_irled_init(void)
 {
 	int ret = 0;
 	int i;
-	unsigned int boardtype = omap4_espresso_get_board_type();
-
-	if (system_rev > 6 && boardtype != SEC_MACHINE_ESPRESSO_USA_BBY)
+	if (system_rev > 6 && (!board_is_bestbuy_variant()))
 		return 0;
 
 	for (i = 0; i < ARRAY_SIZE(irled_gpios); i++)
