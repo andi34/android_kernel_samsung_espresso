@@ -32,6 +32,7 @@
 #include "control.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
+
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 #include <plat/clock.h>
 #include <linux/clk.h>
@@ -267,4 +268,3 @@ void __init omap4_espresso_display_init(void)
 
 	omap_display_init(&espresso_dss_data);
 }
-
