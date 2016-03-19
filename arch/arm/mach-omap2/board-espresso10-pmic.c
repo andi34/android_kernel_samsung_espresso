@@ -644,8 +644,7 @@ static struct platform_device *espresso_pmic_devices[] __initdata = {
 	&espresso_madc_device,
 };
 
-static struct i2c_board_info
-		espresso_twl6030_i2c1_board_info[] __initdata = {
+static struct i2c_board_info espresso_twl6030_i2c1_board_info[] __initdata = {
 	{
 		I2C_BOARD_INFO("twl6030", 0x48),
 		.flags		= I2C_CLIENT_WAKE,
@@ -676,8 +675,7 @@ static struct i2c_board_info
 #endif
 };
 
-static struct i2c_board_info
-		espresso_twl6032_i2c1_board_info_rev03[] __initdata = {
+static struct i2c_board_info espresso_twl6032_i2c1_board_info_rev03[] __initdata = {
 	{
 		I2C_BOARD_INFO("twl6032", 0x48),
 		.flags		= I2C_CLIENT_WAKE,
