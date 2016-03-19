@@ -172,8 +172,10 @@ static int espresso_wifi_status_register(
 {
 	if (wifi_status_cb)
 		return -EAGAIN;
+
 	wifi_status_cb = callback;
 	wifi_status_cb_devid = dev_id;
+
 	return 0;
 }
 
