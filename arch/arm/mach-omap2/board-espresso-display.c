@@ -139,36 +139,6 @@ static struct omapfb_platform_data espresso_fb_pdata = {
 	},
 };
 
-void __init omap4_espresso_display_early_init(void)
-{
-	struct omap_hwmod *timer10_hwmod;
-	struct omap_hwmod *gpio_hwmod;
-	char *gpio_no_reset[] = {
-		"gpio3",
-		"gpio5",
-	};
-	unsigned int i;
-
-	/* correct timer10 hwmod flag settings for espresso board. */
-	timer10_hwmod = omap_hwmod_lookup("timer10");
-	if (likely(timer10_hwmod))
-		timer10_hwmod->flags =
-			(HWMOD_INIT_NO_IDLE | HWMOD_INIT_NO_RESET);
-
-	/* correct gpio hwmod flag settings for espresso board. */
-	for (i = 0; i < ARRAY_SIZE(gpio_no_reset); i++) {
-		gpio_hwmod = omap_hwmod_lookup(gpio_no_reset[i]);
-		if (likely(gpio_hwmod))
-			gpio_hwmod->flags = HWMOD_INIT_NO_RESET;
-	}
-}
-
-static __init int setup_current_panel(char *opt)
-{
-	return kstrtoint(opt, 0, &espresso_panel_data.panel_id);
-}
-__setup("lcd_panel_id=", setup_current_panel);
-
 void __init omap4_espresso_memory_display_init(void)
 {
 	omap_android_display_setup(&espresso_dss_data,
@@ -177,6 +147,29 @@ void __init omap4_espresso_memory_display_init(void)
 				   &espresso_fb_pdata,
 				   get_omap_ion_platform_data());
 }
+
+void __init omap4_espresso_display_early_init(void)
+{
+	struct omap_hwmod *timer10_hwmod;
+	struct omap_hwmod *gpio3_hwmod;
+	struct omap_hwmod *gpio5_hwmod;
+
+	/* correct gpio3 hwmod flag settings for espresso board. */
+	gpio3_hwmod = omap_hwmod_lookup("gpio3");
+	if (likely(gpio3_hwmod))
+		gpio3_hwmod->flags = HWMOD_INIT_NO_RESET;
+
+	/* correct gpio5 hwmod flag settings for espresso board. */
+	gpio5_hwmod = omap_hwmod_lookup("gpio5");
+	if (likely(gpio5_hwmod))
+		gpio5_hwmod->flags = HWMOD_INIT_NO_RESET;
+}
+
+static __init int setup_current_panel(char *opt)
+{
+	return kstrtoint(opt, 0, &espresso_panel_data.panel_id);
+}
+__setup("lcd_panel_id=", setup_current_panel);
 
 void __init omap4_espresso_display_init(void)
 {

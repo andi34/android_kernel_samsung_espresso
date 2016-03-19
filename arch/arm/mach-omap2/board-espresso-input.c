@@ -280,23 +280,6 @@ static void __init espresso_gpio_keypad_gpio_init(void)
 		    omap_muxtbl_get_gpio_by_name(keys_map_low_gpios[i].label);
 }
 
-static void __init espresso_tsp_gpio_init(void)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(tsp_gpios); i++)
-		tsp_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(tsp_gpios[i].label);
-	gpio_request_array(tsp_gpios, ARRAY_SIZE(tsp_gpios));
-
-	espresso_i2c3_boardinfo[0].irq =
-				gpio_to_irq(tsp_gpios[GPIO_TOUCH_nINT].gpio);
-
-	espresso_ts_pdata.gpio_irq = tsp_gpios[GPIO_TOUCH_nINT].gpio;
-	espresso_ts_pdata.gpio_scl = tsp_gpios[GPIO_TOUCH_SCL].gpio;
-	espresso_ts_pdata.gpio_sda = tsp_gpios[GPIO_TOUCH_SDA].gpio;
-}
-
 static struct gpio ts_panel_gpios[] = {
 	{
 		.label	= "TSP_VENDOR1",
@@ -327,6 +310,23 @@ static __init void espresso_ts_panel_setup(void)
 		panel_id |= gpio_get_value(ts_panel_gpios[i].gpio) << i;
 
 	espresso_ts_pdata.panel_name = panel_name[clamp(panel_id, 0, 7)];
+}
+
+static void __init espresso_tsp_gpio_init(void)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(tsp_gpios); i++)
+		tsp_gpios[i].gpio =
+			omap_muxtbl_get_gpio_by_name(tsp_gpios[i].label);
+	gpio_request_array(tsp_gpios, ARRAY_SIZE(tsp_gpios));
+
+	espresso_i2c3_boardinfo[0].irq =
+				gpio_to_irq(tsp_gpios[GPIO_TOUCH_nINT].gpio);
+
+	espresso_ts_pdata.gpio_irq = tsp_gpios[GPIO_TOUCH_nINT].gpio;
+	espresso_ts_pdata.gpio_scl = tsp_gpios[GPIO_TOUCH_SCL].gpio;
+	espresso_ts_pdata.gpio_sda = tsp_gpios[GPIO_TOUCH_SDA].gpio;
 }
 
 void omap4_espresso_tsp_ta_detect(int cable_type)
