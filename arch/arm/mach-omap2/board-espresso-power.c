@@ -25,7 +25,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>
 #include <linux/i2c/twl.h>
-#include <linux/power/smb136_charger.h>
+#include <linux/power/smb_charger.h>
 #include <linux/power/max17042_battery.h>
 #include <linux/bat_manager.h>
 #include <linux/battery.h>
@@ -51,12 +51,12 @@
 
 #define CABLE_DETECT_VALUE	1150
 #define HIGH_BLOCK_TEMP         500
-#define HIGH_RECOVER_TEMP       440
+#define HIGH_RECOVER_TEMP       420
 #define LOW_BLOCK_TEMP          (-50)
 #define LOW_RECOVER_TEMP        0
 
 struct max17042_fuelgauge_callbacks *fuelgauge_callback;
-struct smb_charger_callbacks *charger_callback;
+struct smb_charger_callbacks *espresso_charger_callbacks;
 struct battery_manager_callbacks *batman_callback;
 
 static struct gpio charger_gpios[] = {
@@ -76,9 +76,9 @@ static irqreturn_t charger_state_isr(int irq, void *_data)
 		IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH);
 
 	if (val) {
-		if (charger_callback && charger_callback->get_status_reg)
-			res = charger_callback->
-				get_status_reg(charger_callback);
+		if (espresso_charger_callbacks && espresso_charger_callbacks->get_status_reg)
+			res = espresso_charger_callbacks->
+				get_status_reg(espresso_charger_callbacks);
 
 		if (res == CHARGER_STATUS_FULL &&
 			batman_callback &&
@@ -182,31 +182,31 @@ static void __init espresso_gpio_i2c_init(void)
 		omap_muxtbl_get_gpio_by_name("FUEL_SCL_1.8V");
 }
 
-static void smb136_charger_register_callbacks(
+static void smb_charger_register_callbacks(
 		struct smb_charger_callbacks *ptr)
 {
-	charger_callback = ptr;
+	espresso_charger_callbacks = ptr;
 }
 
 static void set_chg_state(int cable_type)
 {
-	if (charger_callback && charger_callback->set_charging_state)
-		charger_callback->set_charging_state(charger_callback,
+	if (espresso_charger_callbacks && espresso_charger_callbacks->set_charging_state)
+		espresso_charger_callbacks->set_charging_state(espresso_charger_callbacks,
 				cable_type);
 
 	omap4_espresso_usb_detected(cable_type);
 	omap4_espresso_tsp_ta_detect(cable_type);
 }
 
-static struct smb_charger_data smb136_pdata = {
+static struct smb_charger_data smb_pdata = {
 	.set_charge = charger_enble_set,
-	.register_callbacks = smb136_charger_register_callbacks,
+	.register_callbacks = smb_charger_register_callbacks,
 };
 
 static const __initdata struct i2c_board_info smb136_i2c[] = {
 	{
 		I2C_BOARD_INFO("smb136-charger", 0x4D), /* 9A >> 1 */
-		.platform_data = &smb136_pdata,
+		.platform_data = &smb_pdata,
 	},
 };
 
@@ -249,7 +249,7 @@ static int check_charger_type(void)
 			CABLE_TYPE_AC :
 			CABLE_TYPE_USB;
 
-	pr_info("%s : Charger type is [%s], adc=%d\n",
+	pr_info("%s : Charger type is [%s], adc = %d\n",
 		__func__,
 		cable_type == CABLE_TYPE_AC ? "TA" : "USB",
 		adc);
@@ -380,9 +380,9 @@ void __init omap4_espresso_charger_init(void)
 	espresso_gpio_i2c_init();
 
 	battery_manager_pdata.bootmode = sec_bootmode;
-	smb136_pdata.hw_revision = system_rev;
+	smb_pdata.hw_revision = system_rev;
 	pr_info("%s: HW REVISION : %x\n",
-		__func__, smb136_pdata.hw_revision);
+		__func__, smb_pdata.hw_revision);
 
 	battery_manager_pdata.ta_gpio =
 			omap_muxtbl_get_gpio_by_name("TA_nCONNECTED");
