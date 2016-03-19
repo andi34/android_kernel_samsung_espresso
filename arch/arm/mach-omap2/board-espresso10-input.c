@@ -154,7 +154,7 @@ static void tsp_set_power(bool on)
 		pr_debug("tsp: power off.\n");
 		gpio_set_value(tsp_gpios[GPIO_TOUCH_EN].gpio, 0);
 
-		/* Below register settings need to prevent current leakage. */
+		/* Below register settings needed to prevent current leakage. */
 		r = omap4_ctrl_pad_readl(
 				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 		r |= OMAP4_I2C3_SDA_PULLUPRESX_MASK;
@@ -233,7 +233,7 @@ static int espresso_create_sec_key_dev(void)
 
 	if (device_create_file(sec_key, &dev_attr_sec_key_pressed) < 0)
 		pr_err("Failed to create device file(%s)!\n",
-					dev_attr_sec_key_pressed.attr.name);
+			dev_attr_sec_key_pressed.attr.name);
 
 	return 0;
 }
@@ -244,11 +244,11 @@ static void __init espresso_gpio_keypad_gpio_init(void)
 
 	for (i = 0; i < ARRAY_SIZE(keys_map_high_gpios); i++)
 		espresso_gpio_keypad_keys_map_high[i].gpio =
-		     omap_muxtbl_get_gpio_by_name(keys_map_high_gpios[i].label);
+		    omap_muxtbl_get_gpio_by_name(keys_map_high_gpios[i].label);
 
 	for (i = 0; i < ARRAY_SIZE(keys_map_low_gpios); i++)
 		espresso_gpio_keypad_keys_map_low[i].gpio =
-		     omap_muxtbl_get_gpio_by_name(keys_map_low_gpios[i].label);
+		    omap_muxtbl_get_gpio_by_name(keys_map_low_gpios[i].label);
 }
 
 static struct gpio ts_panel_gpios[] = {
