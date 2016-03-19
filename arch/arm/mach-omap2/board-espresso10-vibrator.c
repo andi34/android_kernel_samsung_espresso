@@ -154,7 +154,7 @@ err_to_dev_reg:
 	return -1;
 }
 
-int __init omap4_espresso10_vibrator_init(void)
+int __init omap4_espresso_vibrator_init(void)
 {
 	int ret = 0, i;
 
@@ -182,4 +182,4 @@ int __init omap4_espresso10_vibrator_init(void)
  * This is needed because the vibrator is dependent on omap_dm_timers which get
  * initialized at device_init time
  */
-late_initcall(omap4_espresso10_vibrator_init);
+late_initcall(omap4_espresso_vibrator_init);
