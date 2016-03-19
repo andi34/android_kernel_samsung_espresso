@@ -67,8 +67,8 @@
 #define ADC_CHANNEL_IN2		6
 #define ADC_CHANNEL_IN3		7
 
-#define MAX_ADC_VAL     4096
-#define MIN_ADC_VAL     0
+#define MAX_ADC_VAL	4096
+#define MIN_ADC_VAL	0
 
 #define MASK_SWITCH_USB_AP	0x01
 #define MASK_SWITCH_UART_AP	0x02
@@ -122,8 +122,8 @@ enum {
 };
 
 enum {
-	 UEVENT_EARJACK_DETACHED = 0,
-	 UEVENT_EARJACK_ATTACHED,
+	UEVENT_EARJACK_DETACHED = 0,
+	UEVENT_EARJACK_ATTACHED,
 };
 
 enum {
@@ -247,9 +247,9 @@ static ssize_t espresso_adc_show(struct device *dev,
 				struct device_attribute *attr, char *buf);
 
 static DEVICE_ATTR(usb_sel, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP,
-		espresso_usb_sel_show, espresso_usb_sel_store);
+			espresso_usb_sel_show, espresso_usb_sel_store);
 static DEVICE_ATTR(uart_sel, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP,
-		espresso_uart_sel_show, espresso_uart_sel_store);
+			espresso_uart_sel_show, espresso_uart_sel_store);
 static DEVICE_ATTR(usb_state, S_IRUGO, espresso_usb_state_show, NULL);
 static DEVICE_ATTR(jig_on, S_IRUSR | S_IWUSR, espresso_jig_on_show, NULL);
 static DEVICE_ATTR(adc, S_IRUSR | S_IRGRP, espresso_adc_show, NULL);
@@ -516,11 +516,11 @@ int omap4_espresso_get_adc(enum espresso_adc_ch ch)
 		/* HQRL Standard defines that time margin from Vbus5V detection
 		 * to ADC_CHECK_1 voltage up should be more than 400ms.
 		 */
-		msleep(400);	/* delay for slow increase of line voltage */
+		msleep(400);	/* delay for unstable cable connection */
 
 		espresso_gpio_set_for_adc_check_1();
 
-		msleep(150);    /* delay for slow increase of line voltage */
+		msleep(150);	/* delay for slow increase of line voltage */
 
 		for (i = 0; i < 5; i++) {
 			usleep_range(5000, 5500);
@@ -714,19 +714,19 @@ static void espresso_30pin_detected(int device, bool connected)
 		if (connected) {
 			espresso_deskdock_attached();
 			notify_dock_status(1);
-		 } else {
+		} else {
 			espresso_deskdock_detached();
 			notify_dock_status(0);
-		 }
+		}
 		break;
 	case P30_CARDOCK:
 		if (connected) {
 			espresso_set_dock_switch(UEVENT_DOCK_CAR);
 			notify_dock_status(1);
-		 } else {
+		} else {
 			espresso_set_dock_switch(UEVENT_DOCK_NONE);
 			notify_dock_status(0);
-		 }
+		}
 		break;
 	case P30_JIG:
 		if (connected) {
@@ -899,7 +899,7 @@ static ssize_t espresso_usb_sel_store(struct device *dev,
 		/* If we are transitioning from CP USB to AP USB then notify the
 		 * USB stack that is now attached.
 		 */
-		if ((espresso_otg->current_device == BIT(P30_USB)) &&
+		if ((espresso_otg->current_device & BIT(P30_USB)) &&
 				(old_mode != ESPRESSO_MANUAL_USB_AP)) {
 			espresso_cp_usb_detach();
 			espresso_ap_usb_attach(espresso_otg);
@@ -910,7 +910,7 @@ static ssize_t espresso_usb_sel_store(struct device *dev,
 		/* If we are transitioning from AP USB to CP USB then notify the
 		 * USB stack that is has been detached.
 		 */
-		if ((espresso_otg->current_device == BIT(P30_USB)) &&
+		if ((espresso_otg->current_device & BIT(P30_USB)) &&
 				(old_mode != ESPRESSO_MANUAL_USB_MODEM)) {
 			espresso_ap_usb_detach(espresso_otg);
 			espresso_cp_usb_attach();
@@ -921,7 +921,7 @@ static ssize_t espresso_usb_sel_store(struct device *dev,
 		/* If we are transitioning from CP USB to AP USB then notify the
 		 * USB stack that it is now attached.
 		 */
-		if ((espresso_otg->current_device == BIT(P30_USB)) &&
+		if ((espresso_otg->current_device & BIT(P30_USB)) &&
 				(old_mode != ESPRESSO_MANUAL_USB_MODEM)) {
 			espresso_cp_usb_detach();
 			espresso_ap_usb_attach(espresso_otg);
@@ -1140,8 +1140,8 @@ static struct dock_keyboard_callback {
 static int espresso_dock_keyboard_callback(bool connected)
 {
 	if (espresso_dock_keyboard_cb.dev && espresso_dock_keyboard_cb.cb)
-		return espresso_dock_keyboard_cb.
-		    cb(espresso_dock_keyboard_cb.dev, connected);
+		return espresso_dock_keyboard_cb.cb(espresso_dock_keyboard_cb.
+						    dev, connected);
 	return 0;
 }
 
@@ -1166,8 +1166,7 @@ static void espresso_dock_keyboard_power(bool on)
 	}
 }
 
-static void espresso_dock_keyboard_register_cb(struct input_dev *dev,
-						 void *cb)
+static void espresso_dock_keyboard_register_cb(struct input_dev *dev, void *cb)
 {
 	espresso_dock_keyboard_cb.dev = dev;
 	espresso_dock_keyboard_cb.cb = cb;
@@ -1334,12 +1333,12 @@ void __init omap4_espresso_connector_init(void)
 	dev_set_drvdata(&espresso_otg->dev, espresso_otg);
 
 	espresso_otg->otg.dev			= &espresso_otg->dev;
-	espresso_otg->otg.label		= "espresso_otg_xceiv";
+	espresso_otg->otg.label			= "espresso_otg_xceiv";
 	espresso_otg->otg.set_host		= espresso_otg_set_host;
 	espresso_otg->otg.set_peripheral	= espresso_otg_set_peripheral;
 	espresso_otg->otg.set_suspend		= espresso_otg_set_suspend;
 	espresso_otg->otg.set_vbus		= espresso_otg_set_vbus;
-	espresso_otg->otg.init		= espresso_otg_phy_init;
+	espresso_otg->otg.init			= espresso_otg_phy_init;
 	espresso_otg->otg.shutdown		= espresso_otg_phy_shutdown;
 	espresso_otg->otg.is_active		= espresso_otg_is_active;
 
@@ -1388,13 +1387,10 @@ switch_dev_fail:
 					ARRAY_SIZE(espresso_i2c8_boardinfo));
 
 	/* 30pin connector */
-	espresso_con_pdata.accessory_irq_gpio =
-				connector_gpios[GPIO_ACCESSORY_INT].gpio;
-	espresso_con_pdata.dock_irq_gpio =
-				connector_gpios[GPIO_DOCK_INT].gpio;
+	espresso_con_pdata.accessory_irq_gpio = connector_gpios[GPIO_ACCESSORY_INT].gpio;
+	espresso_con_pdata.dock_irq_gpio = connector_gpios[GPIO_DOCK_INT].gpio;
 	espresso_con_pdata.jig_on_gpio = connector_gpios[GPIO_JIG_ON].gpio;
-	espresso_con_pdata.dock_keyboard_cb =
-	    espresso_dock_keyboard_callback;
+	espresso_con_pdata.dock_keyboard_cb = espresso_dock_keyboard_callback;
 
 	platform_device_register(&espresso_device_connector);
 

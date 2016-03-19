@@ -198,7 +198,7 @@ static ssize_t espresso_usb_state_show(struct device *dev,
 				struct device_attribute *attr, char *buf);
 
 static ssize_t espresso_jig_on_show(struct device *dev,
-				   struct device_attribute *attr, char *buf);
+				struct device_attribute *attr, char *buf);
 
 static ssize_t espresso_adc_show(struct device *dev,
 				struct device_attribute *attr, char *buf);
@@ -832,7 +832,7 @@ static ssize_t espresso_usb_state_show(struct device *dev,
 }
 
 static ssize_t espresso_jig_on_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
+				struct device_attribute *attr, char *buf)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
 	const char *mode;
@@ -1031,8 +1031,6 @@ static void espresso_dock_keyboard_power(bool on)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
 
-	printk(KERN_DEBUG "kbd: dock_keyboard_power %d\n", on);
-
 	if (on) {
 		if (espresso_otg->uart_manual_mode ==
 		    ESPRESSO_MANUAL_UART_MODEM) {
@@ -1158,7 +1156,6 @@ static int __init espresso_plugged_usb_cable_init(void)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
 
-	pr_info("%s, usb cable is plugged", __func__);
 	/* USB connected */
 	if (gpio_get_value(espresso_otg->ta_nconnected) == 0)
 		omap4_vusb_enable(espresso_otg, true);
@@ -1238,8 +1235,7 @@ switch_dev_fail:
 					ARRAY_SIZE(espresso_i2c6_boardinfo));
 
 	/* 30pin connector */
-	espresso_con_pdata.accessory_irq_gpio =
-				connector_gpios[GPIO_ACCESSORY_INT].gpio;
+	espresso_con_pdata.accessory_irq_gpio = connector_gpios[GPIO_ACCESSORY_INT].gpio;
 	espresso_con_pdata.dock_irq_gpio = connector_gpios[GPIO_DOCK_INT].gpio;
 	espresso_con_pdata.jig_on_gpio = connector_gpios[GPIO_JIG_ON].gpio;
 	espresso_con_pdata.dock_keyboard_cb = espresso_dock_keyboard_callback;
