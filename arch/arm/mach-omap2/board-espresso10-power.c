@@ -25,7 +25,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>
 #include <linux/i2c/twl.h>
-#include <linux/power/smb347_charger.h>
+#include <linux/power/smb_charger.h>
 #include <linux/power/max17042_battery.h>
 #include <linux/bat_manager.h>
 #include <linux/battery.h>
@@ -61,7 +61,7 @@
 #define BB_LOW_RECOVER_TEMP        0
 
 struct max17042_fuelgauge_callbacks *fuelgauge_callback;
-struct smb_charger_callbacks *charger_callback;
+struct smb_charger_callbacks *espresso_charger_callbacks;
 struct battery_manager_callbacks *batman_callback;
 
 static struct gpio charger_gpios[] = {
@@ -81,9 +81,9 @@ static irqreturn_t charger_state_isr(int irq, void *_data)
 		IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH);
 
 	if (val) {
-		if (charger_callback && charger_callback->get_status_reg)
-			res = charger_callback->
-				get_status_reg(charger_callback);
+		if (espresso_charger_callbacks && espresso_charger_callbacks->get_status_reg)
+			res = espresso_charger_callbacks->
+				get_status_reg(espresso_charger_callbacks);
 
 		if (res == CHARGER_STATUS_FULL &&
 			batman_callback &&
@@ -187,31 +187,31 @@ static void __init espresso_gpio_i2c_init(void)
 		omap_muxtbl_get_gpio_by_name("FUEL_SCL_1.8V");
 }
 
-static void smb347_charger_register_callbacks(
+static void smb_charger_register_callbacks(
 		struct smb_charger_callbacks *ptr)
 {
-	charger_callback = ptr;
+	espresso_charger_callbacks = ptr;
 }
 
 static void set_chg_state(int cable_type)
 {
-	if (charger_callback && charger_callback->set_charging_state)
-		charger_callback->set_charging_state(charger_callback,
+	if (espresso_charger_callbacks && espresso_charger_callbacks->set_charging_state)
+		espresso_charger_callbacks->set_charging_state(espresso_charger_callbacks,
 				cable_type);
 
 	omap4_espresso_usb_detected(cable_type);
 	omap4_espresso_tsp_ta_detect(cable_type);
 }
 
-static struct smb_charger_data smb347_pdata = {
+static struct smb_charger_data smb_pdata = {
 	.set_charge = charger_enble_set,
-	.register_callbacks = smb347_charger_register_callbacks,
+	.register_callbacks = smb_charger_register_callbacks,
 };
 
 static const __initdata struct i2c_board_info smb347_i2c[] = {
 	{
 		I2C_BOARD_INFO("smb347-charger", 0x0C >> 1),
-		.platform_data = &smb347_pdata,
+		.platform_data = &smb_pdata,
 	},
 };
 
@@ -224,12 +224,6 @@ static void max17042_fuelgauge_register_callbacks(
 static struct max17042_platform_data max17042_pdata = {
 	.register_callbacks = &max17042_fuelgauge_register_callbacks,
 	.enable_current_sense = true,
-	.sdi_capacity = 0x3730,
-	.sdi_vfcapacity = 0x4996,
-	.byd_capacity = 0x36B0,
-	.byd_vfcapacity = 0x48EA,
-	.sdi_low_bat_comp_start_vol = 3600,
-	.byd_low_bat_comp_start_vol = 3650,
 };
 
 static const __initdata struct i2c_board_info max17042_i2c[] = {
@@ -410,6 +404,13 @@ void __init omap4_espresso_charger_init(void)
 		pr_err("%s: gpio_i2c7 device register fail\n", __func__);
 
 	i2c_register_board_info(5, smb347_i2c, ARRAY_SIZE(smb347_i2c));
+	max17042_pdata.sdi_capacity = 0x3730;
+	max17042_pdata.sdi_vfcapacity = 0x4996;
+	max17042_pdata.byd_capacity = 0x36B0;
+	max17042_pdata.byd_vfcapacity = 0x48EA;
+	max17042_pdata.sdi_low_bat_comp_start_vol = 3600;
+	max17042_pdata.byd_low_bat_comp_start_vol = 3650;
+
 	i2c_register_board_info(7, max17042_i2c, ARRAY_SIZE(max17042_i2c));
 
 	ret = platform_device_register(&battery_manager_device);
