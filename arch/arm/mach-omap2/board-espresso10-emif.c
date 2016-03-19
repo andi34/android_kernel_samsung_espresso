@@ -102,7 +102,7 @@ static __initdata struct emif_device_details emif_devices = {
 	.cs0_device = &lpddr2_samsung_4G_S4_dev,
 };
 
-void __init omap4_espresso10_emif_init(void)
+void __init omap4_espresso_emif_init(void)
 {
 	omap_emif_setup_device_details(&emif_devices, &emif_devices);
 }

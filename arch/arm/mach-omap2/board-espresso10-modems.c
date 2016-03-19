@@ -242,7 +242,7 @@ static struct platform_device umts_modem = {
 	},
 };
 
-void __init omap4_espresso10_none_modem_init(void)
+void __init omap4_espresso_none_modem_init(void)
 {
 	if (!board_has_modem())
 		none_modem_cfg_mux();

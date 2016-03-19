@@ -77,7 +77,7 @@ wifi_mem_array[PREALLOC_WLAN_NUMBER_OF_SECTIONS] = {
 
 void *wlan_static_scan_buf0;
 void *wlan_static_scan_buf1;
-static void *espresso10_wifi_mem_prealloc(int section, unsigned long size)
+static void *espresso_wifi_mem_prealloc(int section, unsigned long size)
 {
 	if (section == PREALLOC_WLAN_NUMBER_OF_SECTIONS)
 		return wlan_static_skb;
@@ -92,7 +92,7 @@ static void *espresso10_wifi_mem_prealloc(int section, unsigned long size)
 	return wifi_mem_array[section].mem_ptr;
 }
 
-int __init espresso10_init_wifi_mem(void)
+int __init espresso_init_wifi_mem(void)
 {
 	int i;
 	int j;
@@ -147,17 +147,17 @@ int __init espresso10_init_wifi_mem(void)
 #define WLC_CNTRY_BUF_SZ	4
 
 /* wifi private data */
-static int espresso10_wifi_cd; /* WIFI virtual 'card detect' status */
+static int espresso_wifi_cd; /* WIFI virtual 'card detect' status */
 static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
 
-static int espresso10_wifi_power_state;
-static int espresso10_wifi_reset_state;
+static int espresso_wifi_power_state;
+static int espresso_wifi_reset_state;
 
-static unsigned char espresso10_mac_addr[IFHWADDRLEN]
+static unsigned char espresso_mac_addr[IFHWADDRLEN]
 	= { 0, 0x90, 0x4c, 0, 0, 0 };
 
-static struct resource espresso10_wifi_resources[] = {
+static struct resource espresso_wifi_resources[] = {
 	[0] = {
 		.name	= "bcmdhd_wlan_irq",
 		.flags	= IORESOURCE_IRQ
@@ -166,7 +166,7 @@ static struct resource espresso10_wifi_resources[] = {
 	},
 };
 
-static int espresso10_wifi_status_register(
+static int espresso_wifi_status_register(
 		void (*callback)(int card_present, void *dev_id),
 		void *dev_id)
 {
@@ -177,23 +177,23 @@ static int espresso10_wifi_status_register(
 	return 0;
 }
 
-static unsigned int espresso10_wifi_status(struct device *dev)
+static unsigned int espresso_wifi_status(struct device *dev)
 {
-	return espresso10_wifi_cd;
+	return espresso_wifi_cd;
 }
 
-struct mmc_platform_data espresso10_wifi_data = {
+struct mmc_platform_data espresso_wifi_data = {
 	.ocr_mask		= MMC_VDD_165_195 | MMC_VDD_20_21,
 	.built_in		= 1,
-	.status			= espresso10_wifi_status,
+	.status			= espresso_wifi_status,
 	.card_present		= 0,
-	.register_status_notify	= espresso10_wifi_status_register,
+	.register_status_notify	= espresso_wifi_status_register,
 };
 
-static int espresso10_wifi_set_carddetect(int val)
+static int espresso_wifi_set_carddetect(int val)
 {
 	pr_debug("%s: %d\n", __func__, val);
-	espresso10_wifi_cd = val;
+	espresso_wifi_cd = val;
 
 	if (wifi_status_cb)
 		wifi_status_cb(val, wifi_status_cb_devid);
@@ -213,55 +213,55 @@ struct fixed_voltage_data {
 	bool is_enabled;
 };
 
-static struct regulator_consumer_supply espresso10_vmmc5_supply = {
+static struct regulator_consumer_supply espresso_vmmc5_supply = {
 	.supply		= "vmmc",
 	.dev_name	= "omap_hsmmc.4",
 };
 
-static struct regulator_init_data espresso10_vmmc5 = {
+static struct regulator_init_data espresso_vmmc5 = {
 	.constraints = {
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 	},
 	.num_consumer_supplies	= 1,
-	.consumer_supplies	= &espresso10_vmmc5_supply,
+	.consumer_supplies	= &espresso_vmmc5_supply,
 };
 
-static struct fixed_voltage_config espresso10_vwlan = {
+static struct fixed_voltage_config espresso_vwlan = {
 	.supply_name		= "vwl1271",
 	.microvolts		= 2000000, /* 2.0V */
 	.startup_delay		= 70000, /* 70msec */
 	.enable_high		= 1,
 	.enabled_at_boot	= 0,
-	.init_data		= &espresso10_vmmc5,
+	.init_data		= &espresso_vmmc5,
 };
 
 static struct platform_device omap_vwlan_device = {
 	.name		= "reg-fixed-voltage",
 	.id		= 1,
 	.dev = {
-		.platform_data = &espresso10_vwlan,
+		.platform_data = &espresso_vwlan,
 	},
 };
 
-static int espresso10_wifi_power(int on)
+static int espresso_wifi_power(int on)
 {
 	pr_debug("%s: %d\n", __func__, on);
-	gpio_set_value(espresso10_vwlan.gpio, on);
+	gpio_set_value(espresso_vwlan.gpio, on);
 
-	espresso10_wifi_power_state = on;
+	espresso_wifi_power_state = on;
 
 	return 0;
 }
 
-static int espresso10_wifi_reset(int on)
+static int espresso_wifi_reset(int on)
 {
 	pr_debug("%s: do nothing\n", __func__);
-	espresso10_wifi_reset_state = on;
+	espresso_wifi_reset_state = on;
 
 	return 0;
 }
 
-static int __init espresso10_mac_addr_setup(char *str)
+static int __init espresso_mac_addr_setup(char *str)
 {
 	char macstr[IFHWADDRLEN*3];
 	char *macptr = macstr;
@@ -286,29 +286,29 @@ static int __init espresso10_mac_addr_setup(char *str)
 		res = strict_strtoul(token, 0x10, &val);
 		if (res < 0)
 			return 0;
-		espresso10_mac_addr[i++] = (u8)val;
+		espresso_mac_addr[i++] = (u8)val;
 	}
 
 	return 1;
 }
 
-__setup("androidboot.macaddr=", espresso10_mac_addr_setup);
+__setup("androidboot.macaddr=", espresso_mac_addr_setup);
 
-static int espresso10_wifi_get_mac_addr(unsigned char *buf)
+static int espresso_wifi_get_mac_addr(unsigned char *buf)
 {
 	uint rand_mac;
 
 	if (!buf)
 		return -EFAULT;
 
-	if ((espresso10_mac_addr[4] == 0) && (espresso10_mac_addr[5] == 0)) {
+	if ((espresso_mac_addr[4] == 0) && (espresso_mac_addr[5] == 0)) {
 		srandom32((uint)jiffies);
 		rand_mac = random32();
-		espresso10_mac_addr[3] = (unsigned char)rand_mac;
-		espresso10_mac_addr[4] = (unsigned char)(rand_mac >> 8);
-		espresso10_mac_addr[5] = (unsigned char)(rand_mac >> 16);
+		espresso_mac_addr[3] = (unsigned char)rand_mac;
+		espresso_mac_addr[4] = (unsigned char)(rand_mac >> 8);
+		espresso_mac_addr[5] = (unsigned char)(rand_mac >> 16);
 	}
-	memcpy(buf, espresso10_mac_addr, IFHWADDRLEN);
+	memcpy(buf, espresso_mac_addr, IFHWADDRLEN);
 
 	return 0;
 }
@@ -320,7 +320,7 @@ struct cntry_locales_custom {
 	int  custom_locale_rev;
 };
 
-static struct cntry_locales_custom espresso10_wifi_translate_custom_table[] = {
+static struct cntry_locales_custom espresso_wifi_translate_custom_table[] = {
 /* Table should be filled out based on custom platform regulatory requirement */
 	{"",   "XY", 4},  /* universal */
 	{"US", "US", 69}, /* input ISO "US" to : US regrev 69 */
@@ -366,9 +366,9 @@ static struct cntry_locales_custom espresso10_wifi_translate_custom_table[] = {
 	{"MX", "XY", 3}
 };
 
-static void *espresso10_wifi_get_country_code(char *ccode)
+static void *espresso_wifi_get_country_code(char *ccode)
 {
-	int size = ARRAY_SIZE(espresso10_wifi_translate_custom_table);
+	int size = ARRAY_SIZE(espresso_wifi_translate_custom_table);
 	int i;
 
 	if (!ccode)
@@ -376,61 +376,61 @@ static void *espresso10_wifi_get_country_code(char *ccode)
 
 	for (i = 0; i < size; i++)
 		if (strcmp(ccode,
-			espresso10_wifi_translate_custom_table[i].iso_abbrev)
+			espresso_wifi_translate_custom_table[i].iso_abbrev)
 				== 0)
-			return &espresso10_wifi_translate_custom_table[i];
+			return &espresso_wifi_translate_custom_table[i];
 
-	return &espresso10_wifi_translate_custom_table[0];
+	return &espresso_wifi_translate_custom_table[0];
 }
 
-static struct wifi_platform_data espresso10_wifi_control = {
-	.set_power		= espresso10_wifi_power,
-	.set_reset		= espresso10_wifi_reset,
-	.set_carddetect		= espresso10_wifi_set_carddetect,
+static struct wifi_platform_data espresso_wifi_control = {
+	.set_power		= espresso_wifi_power,
+	.set_reset		= espresso_wifi_reset,
+	.set_carddetect		= espresso_wifi_set_carddetect,
 #ifdef CONFIG_BROADCOM_WIFI_RESERVED_MEM
-	.mem_prealloc		= espresso10_wifi_mem_prealloc,
+	.mem_prealloc		= espresso_wifi_mem_prealloc,
 #endif
-	.get_mac_addr		= espresso10_wifi_get_mac_addr,
-	.get_country_code	= espresso10_wifi_get_country_code,
+	.get_mac_addr		= espresso_wifi_get_mac_addr,
+	.get_country_code	= espresso_wifi_get_country_code,
 };
 
-static struct platform_device espresso10_wifi_device = {
+static struct platform_device espresso_wifi_device = {
 		.name           = "bcmdhd_wlan",
 		.id             = 1,
-		.num_resources  = ARRAY_SIZE(espresso10_wifi_resources),
-		.resource       = espresso10_wifi_resources,
+		.num_resources  = ARRAY_SIZE(espresso_wifi_resources),
+		.resource       = espresso_wifi_resources,
 		.dev            = {
-			.platform_data	= &espresso10_wifi_control,
+			.platform_data	= &espresso_wifi_control,
 		},
 };
 
-static void __init espresso10_wlan_gpio(void)
+static void __init espresso_wlan_gpio(void)
 {
 	unsigned int gpio_wlan_host_wake =
 		omap_muxtbl_get_gpio_by_name("WLAN_HOST_WAKE");
 
 	pr_debug("%s: start\n", __func__);
 
-	espresso10_vwlan.gpio = omap_muxtbl_get_gpio_by_name("WLAN_EN");
+	espresso_vwlan.gpio = omap_muxtbl_get_gpio_by_name("WLAN_EN");
 
 	if (gpio_wlan_host_wake != -EINVAL) {
-		espresso10_wifi_resources[0].start =
+		espresso_wifi_resources[0].start =
 			gpio_to_irq(gpio_wlan_host_wake);
-		espresso10_wifi_resources[0].end =
-			espresso10_wifi_resources[0].start;
+		espresso_wifi_resources[0].end =
+			espresso_wifi_resources[0].start;
 		gpio_request(gpio_wlan_host_wake, "WLAN_HOST_WAKE");
 		gpio_direction_input(gpio_wlan_host_wake);
 	}
 }
 
-void __init omap4_espresso10_wifi_init(void)
+void __init omap4_espresso_wifi_init(void)
 {
 	pr_debug("%s: start\n", __func__);
-	espresso10_wlan_gpio();
+	espresso_wlan_gpio();
 #ifdef CONFIG_BROADCOM_WIFI_RESERVED_MEM
-	espresso10_init_wifi_mem();
+	espresso_init_wifi_mem();
 #endif
 	platform_device_register(&omap_vwlan_device);
 
-	platform_device_register(&espresso10_wifi_device);
+	platform_device_register(&espresso_wifi_device);
 }

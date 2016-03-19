@@ -31,7 +31,7 @@
 /*for sysfs to update sd detect pin's status*/
 static struct device *sd_detection_cmd_dev;
 
-static struct omap2_hsmmc_info espresso10_mmc_info[] = {
+static struct omap2_hsmmc_info espresso_mmc_info[] = {
 	{
 		.mmc		= 2,
 		.nonremovable	= true,
@@ -62,7 +62,7 @@ static struct omap2_hsmmc_info espresso10_mmc_info[] = {
 		.gpio_cd	= -EINVAL,
 		.ocr_mask	= MMC_VDD_165_195 | MMC_VDD_20_21,
 		.nonremovable	= false,
-		.mmc_data	= &espresso10_wifi_data,
+		.mmc_data	= &espresso_wifi_data,
 	},
 	{}	/* Terminator */
 };
@@ -92,7 +92,7 @@ static ssize_t sd_detection_cmd_show(struct device *dev,
 static DEVICE_ATTR(status, 0444, sd_detection_cmd_show, NULL);
 
 
-static int espresso10_hsmmc_late_init(struct device *dev)
+static int espresso_hsmmc_late_init(struct device *dev)
 {
 	int ret = 0;
 	struct platform_device *pdev =
@@ -126,7 +126,7 @@ static int espresso10_hsmmc_late_init(struct device *dev)
 	return ret;
 }
 
-static void __init espresso10_hsmmc_set_late_init(struct device *dev)
+static void __init espresso_hsmmc_set_late_init(struct device *dev)
 {
 	struct omap_mmc_platform_data *pdata;
 
@@ -137,10 +137,10 @@ static void __init espresso10_hsmmc_set_late_init(struct device *dev)
 	}
 
 	pdata = dev->platform_data;
-	pdata->init = espresso10_hsmmc_late_init;
+	pdata->init = espresso_hsmmc_late_init;
 }
 
-static int __init espresso10_hsmmc_init(struct omap2_hsmmc_info *controllers)
+static int __init espresso_hsmmc_init(struct omap2_hsmmc_info *controllers)
 {
 	struct omap2_hsmmc_info *c;
 
@@ -154,12 +154,12 @@ static int __init espresso10_hsmmc_init(struct omap2_hsmmc_info *controllers)
 	omap2_hsmmc_init(controllers);
 
 	for (c = controllers; c->mmc; c++)
-		espresso10_hsmmc_set_late_init(c->dev);
+		espresso_hsmmc_set_late_init(c->dev);
 
 	return 0;
 }
 
-void __init omap4_espresso10_sdio_init(void)
+void __init omap4_espresso_sdio_init(void)
 {
-	espresso10_hsmmc_init(espresso10_mmc_info);
+	espresso_hsmmc_init(espresso_mmc_info);
 }

@@ -37,29 +37,29 @@
 #include <linux/clk.h>
 #endif
 
-#define ESPRESSO10_FB_RAM_SIZE		SZ_16M	/* ~1280*720*4 * 2 */
+#define ESPRESSO_FB_RAM_SIZE		SZ_16M	/* ~1280*720*4 * 2 */
 
-static struct ltn101al03_panel_data espresso10_panel_data = {
+static struct ltn101al03_panel_data espresso_panel_data = {
 	.panel_id = PANEL_SEC,
 };
 
-static struct ltn101al03_panel_data espresso10_panel_data;
+static struct ltn101al03_panel_data espresso_panel_data;
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 static struct clk *dss_ick, *dss_sys_fclk, *dss_dss_fclk;
 #endif
 
-static void espresso10_lcd_set_power(bool enable)
+static void espresso_lcd_set_power(bool enable)
 {
-	pr_debug("(%s): espresso10_lcd_set_power, enable=%d\n",
+	pr_debug("(%s): espresso_lcd_set_power, enable=%d\n",
 		 __func__, enable);
 
-	gpio_set_value(espresso10_panel_data.lcd_en_gpio, enable);
+	gpio_set_value(espresso_panel_data.lcd_en_gpio, enable);
 }
 
-static void espresso10_lcd_set_gptimer_idle(void)
+static void espresso_lcd_set_gptimer_idle(void)
 {
 	struct omap_hwmod *timer10_hwmod;
-	pr_debug("espresso10_lcd_set_gptimer_idle\n");
+	pr_debug("espresso_lcd_set_gptimer_idle\n");
 
 	timer10_hwmod = omap_hwmod_lookup("timer10");
 	if (likely(timer10_hwmod))
@@ -75,12 +75,12 @@ static void dss_clks_disable(void)
 }
 #endif
 
-static struct omap_dss_device espresso10_lcd_device = {
+static struct omap_dss_device espresso_lcd_device = {
 	.name			= "lcd",
 	.driver_name		= "ltn101al03_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
 	.phy.dpi.data_lines	= 24,
-	.data			= &espresso10_panel_data,
+	.data			= &espresso_panel_data,
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 	.skip_init		= true,
@@ -105,7 +105,7 @@ static struct omap_dss_device espresso10_lcd_device = {
 	},
 };
 
-static void __init espresso10_hdmi_mux_init(void)
+static void __init espresso_hdmi_mux_init(void)
 {
 	u32 r;
 	/* strong pullup on DDC lines using unpublished register */
@@ -114,7 +114,7 @@ static void __init espresso10_hdmi_mux_init(void)
 	omap4_ctrl_pad_writel(r, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_1);
 }
 
-static struct omap_dss_device espresso10_hdmi_device = {
+static struct omap_dss_device espresso_hdmi_device = {
 	.name = "hdmi",
 	.driver_name = "hdmi_panel",
 	.type = OMAP_DISPLAY_TYPE_HDMI,
@@ -131,37 +131,37 @@ static struct omap_dss_device espresso10_hdmi_device = {
 	.channel = OMAP_DSS_CHANNEL_DIGIT,
 };
 
-static struct omap_dss_device *espresso10_dss_devices[] = {
-	&espresso10_lcd_device,
-	&espresso10_hdmi_device,
+static struct omap_dss_device *espresso_dss_devices[] = {
+	&espresso_lcd_device,
+	&espresso_hdmi_device,
 };
 
-static struct omap_dss_board_info espresso10_dss_data = {
-	.devices	= espresso10_dss_devices,
-	.default_device	= &espresso10_lcd_device,
+static struct omap_dss_board_info espresso_dss_data = {
+	.devices	= espresso_dss_devices,
+	.default_device	= &espresso_lcd_device,
 };
 
-static struct omapfb_platform_data espresso10_fb_pdata = {
+static struct omapfb_platform_data espresso_fb_pdata = {
 	.mem_desc = {
 		.region_cnt = 1,
 		.region = {
 			[0] = {
-				.size = ESPRESSO10_FB_RAM_SIZE,
+				.size = ESPRESSO_FB_RAM_SIZE,
 			},
 		},
 	},
 };
 
-void __init omap4_espresso10_memory_display_init(void)
+void __init omap4_espresso_memory_display_init(void)
 {
-	omap_android_display_setup(&espresso10_dss_data,
+	omap_android_display_setup(&espresso_dss_data,
 				   NULL,
 				   NULL,
-				   &espresso10_fb_pdata,
+				   &espresso_fb_pdata,
 				   get_omap_ion_platform_data());
 }
 
-void __init omap4_espresso10_display_early_init(void)
+void __init omap4_espresso_display_early_init(void)
 {
 	struct omap_hwmod *timer10_hwmod;
 	struct omap_hwmod *gpio3_hwmod;
@@ -186,11 +186,11 @@ void __init omap4_espresso10_display_early_init(void)
 
 static __init int setup_current_panel(char *opt)
 {
-	return kstrtoint(opt, 0, &espresso10_panel_data.panel_id);
+	return kstrtoint(opt, 0, &espresso_panel_data.panel_id);
 }
 __setup("lcd_panel_id=", setup_current_panel);
 
-void __init omap4_espresso10_display_init(void)
+void __init omap4_espresso_display_init(void)
 {
 	struct ltn101al03_panel_data *panel;
 	int ret, i;
@@ -201,7 +201,7 @@ void __init omap4_espresso10_display_init(void)
 		BRIGHTNESS_25, BRIGHTNESS_DEFAULT, BRIGHTNESS_MAX};
 	int kernel_brightness[] = {0, 3, 3, 8, 47, 81};
 
-	if (espresso10_panel_data.panel_id == PANEL_BOE) {
+	if (espresso_panel_data.panel_id == PANEL_BOE) {
 		kernel_brightness[4] = 47;
 		kernel_brightness[5] = 81;
 	}
@@ -225,45 +225,45 @@ void __init omap4_espresso10_display_init(void)
 		/* return -ENOENT; */
 	 }
 #endif
-	espresso10_panel_data.lvds_nshdn_gpio =
+	espresso_panel_data.lvds_nshdn_gpio =
 	    omap_muxtbl_get_gpio_by_name("LVDS_nSHDN");
-	espresso10_panel_data.lcd_en_gpio =
+	espresso_panel_data.lcd_en_gpio =
 	    omap_muxtbl_get_gpio_by_name("LCD_EN");
-	espresso10_panel_data.led_backlight_reset_gpio =
+	espresso_panel_data.led_backlight_reset_gpio =
 	    omap_muxtbl_get_gpio_by_name("LED_BACKLIGHT_RESET");
-	espresso10_panel_data.backlight_gptimer_num = 10;
-	espresso10_panel_data.set_power = espresso10_lcd_set_power;
-	espresso10_panel_data.set_gptimer_idle =
-		espresso10_lcd_set_gptimer_idle;
+	espresso_panel_data.backlight_gptimer_num = 10;
+	espresso_panel_data.set_power = espresso_lcd_set_power;
+	espresso_panel_data.set_gptimer_idle =
+		espresso_lcd_set_gptimer_idle;
 
 	for (i = 0 ; i < NUM_BRIGHTNESS_LEVEL ; i++) {
-		espresso10_panel_data.brightness_table.platform_value[i] =
+		espresso_panel_data.brightness_table.platform_value[i] =
 			platform_brightness[i];
-		espresso10_panel_data.brightness_table.kernel_value[i] =
+		espresso_panel_data.brightness_table.kernel_value[i] =
 			kernel_brightness[i];
 	}
 
-	ret = gpio_request(espresso10_panel_data.lcd_en_gpio, "lcd_en");
+	ret = gpio_request(espresso_panel_data.lcd_en_gpio, "lcd_en");
 	if (ret < 0)
 		pr_err("(%s): gpio_request %d failed!\n", __func__,
-		       espresso10_panel_data.lcd_en_gpio);
+		       espresso_panel_data.lcd_en_gpio);
 
-	gpio_direction_output(espresso10_panel_data.lcd_en_gpio, 1);
+	gpio_direction_output(espresso_panel_data.lcd_en_gpio, 1);
 
-	panel = &espresso10_panel_data;
+	panel = &espresso_panel_data;
 
-	espresso10_lcd_device.data = panel;
+	espresso_lcd_device.data = panel;
 
 	if (board_is_bestbuy_variant()) {
 		/* Two DSS devices: LCD & HDMI */
-		espresso10_dss_data.num_devices = 2;
-		espresso10_hdmi_device.hpd_gpio =
+		espresso_dss_data.num_devices = 2;
+		espresso_hdmi_device.hpd_gpio =
 			omap_muxtbl_get_gpio_by_name("HDMI_HPD");
-		espresso10_hdmi_mux_init();
+		espresso_hdmi_mux_init();
 	} else
 		/* LCD only */
-		espresso10_dss_data.num_devices = 1;
+		espresso_dss_data.num_devices = 1;
 
-	omap_display_init(&espresso10_dss_data);
+	omap_display_init(&espresso_dss_data);
 }
 

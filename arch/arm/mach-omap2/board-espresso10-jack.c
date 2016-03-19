@@ -110,7 +110,7 @@ static struct sec_jack_buttons_zone sec_jack_buttons_zones[] = {
 static int sec_jack_get_adc_value(void)
 {
 	int value;
-	value = omap4_espresso10_get_adc(EAR_ADC_35);
+	value = omap4_espresso_get_adc(EAR_ADC_35);
 	return (int)(3300*value) / 4095;
 }
 
@@ -138,7 +138,7 @@ enum {
 	GPIO_EAR_MICBIAS_EN
 };
 
-void __init omap4_espresso10_jack_init(void)
+void __init omap4_espresso_jack_init(void)
 {
 	struct gpio jack_gpios[] = {
 		[GPIO_DET_3_5] = {
