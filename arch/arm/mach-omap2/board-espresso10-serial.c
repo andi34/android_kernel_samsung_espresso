@@ -74,8 +74,6 @@ static void __init espresso_i2c_init(void)
 	omap_register_i2c_bus_board_data(2, &espresso_i2c_2_bus_pdata);
 	omap_register_i2c_bus_board_data(3, &espresso_i2c_3_bus_pdata);
 	omap_register_i2c_bus_board_data(4, &espresso_i2c_4_bus_pdata);
-
-
 	/*
 	 * Phoenix Audio IC needs I2C1 to
 	 * start with 400 KHz or less
@@ -244,20 +242,20 @@ static struct omap_uart_port_info espresso_uart2_info __initdata = {
 	.rts_mux_driver_control	= 1,
 };
 
-static void __init omap_serial_none_pads_cfg_mux(void)
+static void __init omap_serial_none_pins_cfg_mux(void)
 {
 	int i;
 	struct omap_mux_partition *partition;
 	struct omap_mux_partition *core = omap_mux_get("core");
 	struct omap_mux_partition *wkup = omap_mux_get("wkup");
 	struct omap_muxtbl *tbl;
-	char *none_pads[] = {
+	char *none_pins[] = {
 		"AP_FLM_RXD(nc)",
 		"AP_FLM_TXD(nc)",
 	};
 
-	for (i = 0; i < ARRAY_SIZE(none_pads); i++) {
-		tbl = omap_muxtbl_find_by_name(none_pads[i]);
+	for (i = 0; i < ARRAY_SIZE(none_pins); i++) {
+		tbl = omap_muxtbl_find_by_name(none_pins[i]);
 		if (!tbl)
 			continue;
 		if (tbl->domain == OMAP4_MUXTBL_DOMAIN_WKUP)
@@ -304,7 +302,7 @@ void __init omap4_espresso_serial_init(void)
 int __init omap4_espresso_serial_late_init(void)
 {
 	if (system_rev > 6 && board_has_modem())
-		omap_serial_none_pads_cfg_mux();
+		omap_serial_none_pins_cfg_mux();
 
 	return 0;
 }
