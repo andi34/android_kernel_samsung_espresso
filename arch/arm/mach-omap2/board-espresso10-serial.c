@@ -32,7 +32,7 @@
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
 
-static struct i2c_board_info __initdata espresso10_i2c_board_info[] = {
+static struct i2c_board_info __initdata espresso_i2c_board_info[] = {
 	{
 		I2C_BOARD_INFO("ducati", 0x20),
 		.irq		= OMAP44XX_IRQ_I2C2,
@@ -63,7 +63,7 @@ static struct omap_i2c_bus_board_data __initdata espresso_i2c_2_bus_pdata;
 static struct omap_i2c_bus_board_data __initdata espresso_i2c_3_bus_pdata;
 static struct omap_i2c_bus_board_data __initdata espresso_i2c_4_bus_pdata;
 
-static void __init espresso10_i2c_init(void)
+static void __init espresso_i2c_init(void)
 {
 	omap_i2c_hwspinlock_init(1, 0, &espresso_i2c_1_bus_pdata);
 	omap_i2c_hwspinlock_init(2, 1, &espresso_i2c_2_bus_pdata);
@@ -81,53 +81,53 @@ static void __init espresso10_i2c_init(void)
 	 * start with 400 KHz or less
 	 */
 	omap_register_i2c_bus(1, 400, NULL, 0);
-	omap_register_i2c_bus(2, 400, espresso10_i2c_board_info,
-			      ARRAY_SIZE(espresso10_i2c_board_info));
+	omap_register_i2c_bus(2, 400, espresso_i2c_board_info,
+			      ARRAY_SIZE(espresso_i2c_board_info));
 	omap_register_i2c_bus(3, 400, NULL, 0);
 	omap_register_i2c_bus(4, 400, NULL, 0);
 }
 
-static struct i2c_gpio_platform_data espresso10_gpio_i2c6_pdata = {
+static struct i2c_gpio_platform_data espresso_gpio_i2c6_pdata = {
 	/* .sda_pin = (ADC_I2C_SDA_1.8V), */
 	/* .scl_pin = (ADC_I2C_SCL_1.8V), */
 	.udelay = 10,
 	.timeout = 0,
 };
 
-static struct platform_device espresso10_gpio_i2c6_device = {
+static struct platform_device espresso_gpio_i2c6_device = {
 	.name = "i2c-gpio",
 	.id = 6,
 	.dev = {
-		.platform_data = &espresso10_gpio_i2c6_pdata,
+		.platform_data = &espresso_gpio_i2c6_pdata,
 	}
 };
 
-static struct i2c_gpio_platform_data espresso10_gpio_i2c8_pdata = {
+static struct i2c_gpio_platform_data espresso_gpio_i2c8_pdata = {
 	/*.sda_pin      = (MHL_SDA_1.8V),*/
 	/*.scl_pin      = (MHL_SCL_1.8V),*/
 	.udelay         = 3,
 	.timeout	= 0,
 };
 
-static struct platform_device espresso10_gpio_i2c8_device = {
+static struct platform_device espresso_gpio_i2c8_device = {
 	.name = "i2c-gpio",
 	.id = 8,
 	.dev = {
-		.platform_data = &espresso10_gpio_i2c8_pdata,
+		.platform_data = &espresso_gpio_i2c8_pdata,
 	},
 };
 
-static void __init espresso10_gpio_i2c_init(void)
+static void __init espresso_gpio_i2c_init(void)
 {
 	/* gpio-i2c 6 */
-	espresso10_gpio_i2c6_pdata.sda_pin =
+	espresso_gpio_i2c6_pdata.sda_pin =
 		omap_muxtbl_get_gpio_by_name("ADC_I2C_SDA_1.8V");
-	espresso10_gpio_i2c6_pdata.scl_pin =
+	espresso_gpio_i2c6_pdata.scl_pin =
 		omap_muxtbl_get_gpio_by_name("ADC_I2C_SCL_1.8V");
 	/* gpio-i2c 8 */
-	espresso10_gpio_i2c8_pdata.sda_pin =
+	espresso_gpio_i2c8_pdata.sda_pin =
 		omap_muxtbl_get_gpio_by_name("MHL_SDA_1.8V");
-	espresso10_gpio_i2c8_pdata.scl_pin =
+	espresso_gpio_i2c8_pdata.scl_pin =
 		omap_muxtbl_get_gpio_by_name("MHL_SCL_1.8V");
 }
 
@@ -136,7 +136,7 @@ enum {
 	GPIO_GPS_nRST
 };
 
-static void espresso10_bcmgps_init(void)
+static void espresso_bcmgps_init(void)
 {
 	struct device *gps_dev;
 	struct gpio gps_gpios[] = {
@@ -172,7 +172,7 @@ static void espresso10_bcmgps_init(void)
 			 gps_gpios[GPIO_GPS_nRST].gpio);
 }
 
-static struct omap_device_pad espresso10_uart1_pads[] __initdata = {
+static struct omap_device_pad espresso_uart1_pads[] __initdata = {
 	{
 		.name	= "mcspi1_cs3.uart1_rts",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE1,
@@ -193,7 +193,7 @@ static struct omap_device_pad espresso10_uart1_pads[] __initdata = {
 	},
 };
 
-static struct omap_device_pad espresso10_uart2_pads[] __initdata = {
+static struct omap_device_pad espresso_uart2_pads[] __initdata = {
 	{
 		.name	= "uart2_cts.uart2_cts",
 		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
@@ -212,7 +212,7 @@ static struct omap_device_pad espresso10_uart2_pads[] __initdata = {
 	},
 };
 
-static struct omap_device_pad espresso10_uart3_pads[] __initdata = {
+static struct omap_device_pad espresso_uart3_pads[] __initdata = {
 	{
 		.name   = "uart3_tx_irtx.uart3_tx_irtx",
 		.enable = OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -223,7 +223,7 @@ static struct omap_device_pad espresso10_uart3_pads[] __initdata = {
 	},
 };
 
-static struct omap_device_pad espresso10_uart4_pads[] __initdata = {
+static struct omap_device_pad espresso_uart4_pads[] __initdata = {
 	{
 		.name	= "uart4_tx.uart4_tx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -234,7 +234,7 @@ static struct omap_device_pad espresso10_uart4_pads[] __initdata = {
 	},
 };
 
-static struct omap_uart_port_info espresso10_uart2_info __initdata = {
+static struct omap_uart_port_info espresso_uart2_info __initdata = {
 	.use_dma		= 0,
 	.dma_rx_buf_size	= DEFAULT_RXDMA_BUFSIZE,
 	.dma_rx_poll_rate	= DEFAULT_RXDMA_POLLRATE,
@@ -271,37 +271,37 @@ static void __init omap_serial_none_pads_cfg_mux(void)
 	}
 }
 
-static void __init espresso10_uart_init(void)
+static void __init espresso_uart_init(void)
 {
-	omap_serial_init_port_pads(0, espresso10_uart1_pads,
-				   ARRAY_SIZE(espresso10_uart1_pads), NULL);
-	omap_serial_init_port_pads(1, espresso10_uart2_pads,
-				   ARRAY_SIZE(espresso10_uart2_pads),
-				   &espresso10_uart2_info);
-	omap_serial_init_port_pads(2, espresso10_uart3_pads,
-				   ARRAY_SIZE(espresso10_uart3_pads), NULL);
-	omap_serial_init_port_pads(3, espresso10_uart4_pads,
-				   ARRAY_SIZE(espresso10_uart4_pads), NULL);
+	omap_serial_init_port_pads(0, espresso_uart1_pads,
+				   ARRAY_SIZE(espresso_uart1_pads), NULL);
+	omap_serial_init_port_pads(1, espresso_uart2_pads,
+				   ARRAY_SIZE(espresso_uart2_pads),
+				   &espresso_uart2_info);
+	omap_serial_init_port_pads(2, espresso_uart3_pads,
+				   ARRAY_SIZE(espresso_uart3_pads), NULL);
+	omap_serial_init_port_pads(3, espresso_uart4_pads,
+				   ARRAY_SIZE(espresso_uart4_pads), NULL);
 
-	espresso10_bcmgps_init();
+	espresso_bcmgps_init();
 }
 
-static struct platform_device *espresso10_serial_devices[] __initdata = {
-	&espresso10_gpio_i2c6_device,
-	&espresso10_gpio_i2c8_device,
+static struct platform_device *espresso_serial_devices[] __initdata = {
+	&espresso_gpio_i2c6_device,
+	&espresso_gpio_i2c8_device,
 };
 
-void __init omap4_espresso10_serial_init(void)
+void __init omap4_espresso_serial_init(void)
 {
-	espresso10_i2c_init();
-	espresso10_gpio_i2c_init();
-	espresso10_uart_init();
+	espresso_i2c_init();
+	espresso_gpio_i2c_init();
+	espresso_uart_init();
 
-	platform_add_devices(espresso10_serial_devices,
-			     ARRAY_SIZE(espresso10_serial_devices));
+	platform_add_devices(espresso_serial_devices,
+			     ARRAY_SIZE(espresso_serial_devices));
 }
 
-int __init omap4_espresso10_serial_late_init(void)
+int __init omap4_espresso_serial_late_init(void)
 {
 	if (system_rev > 6 && board_has_modem())
 		omap_serial_none_pads_cfg_mux();
@@ -309,4 +309,4 @@ int __init omap4_espresso10_serial_late_init(void)
 	return 0;
 }
 
-late_initcall(omap4_espresso10_serial_late_init);
+late_initcall(omap4_espresso_serial_late_init);

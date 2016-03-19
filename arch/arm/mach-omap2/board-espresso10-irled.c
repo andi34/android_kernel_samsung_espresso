@@ -308,7 +308,7 @@ err_create_dev:
 	return -1;
 }
 
-int __init omap4_espresso10_irled_init(void)
+int __init omap4_espresso_irled_init(void)
 {
 	int ret = 0;
 	int i;
@@ -340,4 +340,4 @@ int __init omap4_espresso10_irled_init(void)
 	return ret;
 }
 
-late_initcall(omap4_espresso10_irled_init);
+late_initcall(omap4_espresso_irled_init);

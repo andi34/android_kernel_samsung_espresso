@@ -146,44 +146,44 @@ static void charger_enble_set(int state)
 		gpio_get_value(charger_gpios[TA_ENABLE].gpio));
 }
 
-static struct i2c_gpio_platform_data espresso10_gpio_i2c5_pdata = {
+static struct i2c_gpio_platform_data espresso_gpio_i2c5_pdata = {
 	.udelay = 10,
 	.timeout = 0,
 };
 
-static struct platform_device espresso10_gpio_i2c5_device = {
+static struct platform_device espresso_gpio_i2c5_device = {
 	.name = "i2c-gpio",
 	.id = 5,
 	.dev = {
-		.platform_data = &espresso10_gpio_i2c5_pdata,
+		.platform_data = &espresso_gpio_i2c5_pdata,
 	}
 };
 
-static struct i2c_gpio_platform_data espresso10_gpio_i2c7_pdata = {
+static struct i2c_gpio_platform_data espresso_gpio_i2c7_pdata = {
 	.udelay = 3,
 	.timeout = 0,
 };
 
-static struct platform_device espresso10_gpio_i2c7_device = {
+static struct platform_device espresso_gpio_i2c7_device = {
 	.name = "i2c-gpio",
 	.id = 7,
 	.dev = {
-		.platform_data = &espresso10_gpio_i2c7_pdata,
+		.platform_data = &espresso_gpio_i2c7_pdata,
 	},
 };
 
-static void __init espresso10_gpio_i2c_init(void)
+static void __init espresso_gpio_i2c_init(void)
 {
 	/* gpio-i2c 5 */
-	espresso10_gpio_i2c5_pdata.sda_pin =
+	espresso_gpio_i2c5_pdata.sda_pin =
 		omap_muxtbl_get_gpio_by_name("CHG_SDA_1.8V");
-	espresso10_gpio_i2c5_pdata.scl_pin =
+	espresso_gpio_i2c5_pdata.scl_pin =
 		omap_muxtbl_get_gpio_by_name("CHG_SCL_1.8V");
 
 	/* gpio-i2c 7 */
-	espresso10_gpio_i2c7_pdata.sda_pin =
+	espresso_gpio_i2c7_pdata.sda_pin =
 		omap_muxtbl_get_gpio_by_name("FUEL_SDA_1.8V");
-	espresso10_gpio_i2c7_pdata.scl_pin =
+	espresso_gpio_i2c7_pdata.scl_pin =
 		omap_muxtbl_get_gpio_by_name("FUEL_SCL_1.8V");
 }
 
@@ -199,8 +199,8 @@ static void set_chg_state(int cable_type)
 		charger_callback->set_charging_state(charger_callback,
 				cable_type);
 
-	omap4_espresso10_usb_detected(cable_type);
-	omap4_espresso10_tsp_ta_detect(cable_type);
+	omap4_espresso_usb_detected(cable_type);
+	omap4_espresso_tsp_ta_detect(cable_type);
 }
 
 static struct smb_charger_data smb347_pdata = {
@@ -252,7 +252,7 @@ static int check_charger_type(void)
 	int cable_type;
 	short adc;
 
-	adc = omap4_espresso10_get_adc(ADC_CHECK_1);
+	adc = omap4_espresso_get_adc(ADC_CHECK_1);
 	cable_type = adc > CABLE_DETECT_VALUE ?
 			CABLE_TYPE_AC :
 			CABLE_TYPE_USB;
@@ -380,12 +380,12 @@ void check_jig_status(int status)
 	battery_manager_pdata.jig_on = status;
 }
 
-void __init omap4_espresso10_charger_init(void)
+void __init omap4_espresso_charger_init(void)
 {
 	int ret;
 
 	charger_gpio_init();
-	espresso10_gpio_i2c_init();
+	espresso_gpio_i2c_init();
 	if (board_is_bestbuy_variant() && sec_bootmode == 5) {
 		battery_manager_pdata.high_block_temp = BB_HIGH_BLOCK_TEMP;
 		battery_manager_pdata.high_recover_temp = BB_HIGH_RECOVER_TEMP;
@@ -401,11 +401,11 @@ void __init omap4_espresso10_charger_init(void)
 	if (!gpio_is_valid(battery_manager_pdata.ta_gpio))
 		gpio_request(battery_manager_pdata.ta_gpio, "TA_nCONNECTED");
 
-	ret = platform_device_register(&espresso10_gpio_i2c5_device);
+	ret = platform_device_register(&espresso_gpio_i2c5_device);
 	if (ret < 0)
 		pr_err("%s: gpio_i2c5 device register fail\n", __func__);
 
-	ret = platform_device_register(&espresso10_gpio_i2c7_device);
+	ret = platform_device_register(&espresso_gpio_i2c7_device);
 	if (ret < 0)
 		pr_err("%s: gpio_i2c7 device register fail\n", __func__);
 
