@@ -54,6 +54,14 @@
 #include "sec_common.h"
 #include "sec_muxtbl.h"
 
+/* gpio to distinguish WiFi and USA-BBY (P51xx)
+ *
+ * HW_REV4 | HIGH | LOW
+ * --------+------+------
+ *         |IrDA O|IrDA X
+ */
+#define GPIO_HW_REV4		41
+
 #define ESPRESSO_MEM_BANK_0_SIZE	0x20000000
 #define ESPRESSO_MEM_BANK_0_ADDR	0x80000000
 #define ESPRESSO_MEM_BANK_1_SIZE	0x20000000
@@ -222,6 +230,19 @@ static void __init omap4_espresso_reboot_init(void)
 		register_reboot_notifier(&espresso_reboot_notifier);
 }
 
+static void __init espresso10_update_board_type(void)
+{
+	/* because omap4_mux_init is not called when this function is
+	 * called, padconf reg must be configured by low-level function. */
+	omap_writew(OMAP_MUX_MODE3 | OMAP_PIN_INPUT,
+		    OMAP4_CTRL_MODULE_PAD_CORE_MUX_PBASE +
+		    OMAP4_CTRL_MODULE_PAD_GPMC_A17_OFFSET);
+
+	gpio_request(GPIO_HW_REV4, "HW_REV4");
+	if (gpio_get_value(GPIO_HW_REV4))
+		_board_is_bestbuy_variant = true;
+}
+
 static ssize_t espresso_soc_family_show(struct kobject *kobj,
 				    struct kobj_attribute *attr, char *buf)
 {
@@ -354,7 +375,14 @@ static void __init espresso_init(void)
 	sec_common_init_early();
 
 	omap4_espresso_emif_init();
-	sec_muxtbl_init(SEC_MACHINE_ESPRESSO, system_rev);
+
+	if (board_is_espresso10()) {
+		espresso10_update_board_type();
+		if (board_is_bestbuy_variant() && system_rev >= 7)
+			sec_muxtbl_init(SEC_MACHINE_ESPRESSO10_USA_BBY, system_rev);
+		sec_muxtbl_init(SEC_MACHINE_ESPRESSO10, system_rev);
+	} else
+		sec_muxtbl_init(SEC_MACHINE_ESPRESSO, system_rev);
 
 	/* initialize sec common infrastructures */
 	sec_common_init();
@@ -407,7 +435,10 @@ static void omap4_espresso_init_carveout_sizes(
 	ion->secure_output_wfdhdcp_size = 0;
 	ion->ducati_heap_size = (SZ_1M * 65);
 #ifndef CONFIG_ION_OMAP_TILER_DYNAMIC_ALLOC
-	ion->nonsecure_tiler2d_size = (SZ_1M * 8);
+	if (board_is_espresso10())
+		ion->nonsecure_tiler2d_size = (SZ_1M * 19);
+	else
+		ion->nonsecure_tiler2d_size = (SZ_1M * 8);
 	ion->tiler2d_size = (SZ_1M * 81);
 #endif
 }

@@ -17,8 +17,11 @@
 
 #include <linux/serial_core.h>
 
-#include "sec_board_id.h"
 #include "sec_common.h"
+
+#define SEC_MACHINE_ESPRESSO			0x01
+#define SEC_MACHINE_ESPRESSO10			0x02
+#define SEC_MACHINE_ESPRESSO10_USA_BBY		0x06
 
 enum espresso_adc_ch {
 	REMOTE_SENSE = 0,
