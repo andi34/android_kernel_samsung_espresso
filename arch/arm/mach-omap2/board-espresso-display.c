@@ -41,10 +41,10 @@
 #define ESPRESSO_FB_RAM_SIZE		SZ_16M	/* ~1280*720*4 * 2 */
 
 static struct ltn070nl01_panel_data espresso_panel_data;
+
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 static struct clk *dss_ick, *dss_sys_fclk, *dss_dss_fclk;
 #endif
-
 
 static void espresso_lcd_set_power(bool enable)
 {
@@ -52,8 +52,8 @@ static void espresso_lcd_set_power(bool enable)
 		 __func__, enable);
 
 	gpio_set_value(espresso_panel_data.lcd_en_gpio, enable);
-
 }
+
 static void espresso_lcd_set_gptimer_idle(void)
 {
 	struct omap_hwmod *timer10_hwmod;
@@ -64,8 +64,6 @@ static void espresso_lcd_set_gptimer_idle(void)
 		omap_hwmod_idle(timer10_hwmod);
 }
 
-
-
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 static void dss_clks_disable(void)
 {
@@ -74,29 +72,17 @@ static void dss_clks_disable(void)
 	clk_disable(dss_sys_fclk);
 }
 #endif
+
 static struct omap_dss_device espresso_lcd_device = {
 	.name			= "lcd",
 	.driver_name		= "ltn070nl01_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
 	.phy.dpi.data_lines	= 24,
 	.data			= &espresso_panel_data,
-#if 0
-	.clocks = {
-		.dispc = {
-			.channel = {
-				.lck_div = 1,	/* LCD */
-				.pck_div = 2,	/* PCD */
-				.lcd_clk_src = OMAP_DSS_CLK_SRC_FCK,
-			},
-		.dispc_fclk_src	= OMAP_DSS_CLK_SRC_FCK,
-	},
-},
-#endif
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 	.skip_init		= true,
 	.dss_clks_disable	= dss_clks_disable,
-
 #else
 	.skip_init		= false,
 #endif
@@ -181,7 +167,8 @@ void __init omap4_espresso_display_init(void)
 {
 	struct ltn070nl01_panel_data *panel;
 	int ret, i;
-	/* Default setting vlaue for BOE panel*/
+
+	/* Default setting value for BOE panel*/
 	int platform_brightness[] = {
 		BRIGHTNESS_OFF, BRIGHTNESS_DIM, BRIGHTNESS_MIN,
 		BRIGHTNESS_25, BRIGHTNESS_DEFAULT, BRIGHTNESS_MAX};
@@ -232,11 +219,10 @@ void __init omap4_espresso_display_init(void)
 	}
 
 	ret = gpio_request(espresso_panel_data.lcd_en_gpio, "lcd_en");
-	if (ret < 0) {
+	if (ret < 0)
 		pr_err("(%s): gpio_request %d failed!\n", __func__,
 		       espresso_panel_data.lcd_en_gpio);
-		/*goto err; */
-	}
+
 	gpio_direction_output(espresso_panel_data.lcd_en_gpio, 1);
 
 	panel = &espresso_panel_data;

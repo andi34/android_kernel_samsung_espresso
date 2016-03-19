@@ -32,6 +32,7 @@
 #include "control.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
+
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 #include <plat/clock.h>
 #include <linux/clk.h>
@@ -44,6 +45,7 @@ static struct ltn101al03_panel_data espresso_panel_data = {
 };
 
 static struct ltn101al03_panel_data espresso_panel_data;
+
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 static struct clk *dss_ick, *dss_sys_fclk, *dss_dss_fclk;
 #endif
@@ -233,8 +235,7 @@ void __init omap4_espresso_display_init(void)
 	    omap_muxtbl_get_gpio_by_name("LED_BACKLIGHT_RESET");
 	espresso_panel_data.backlight_gptimer_num = 10;
 	espresso_panel_data.set_power = espresso_lcd_set_power;
-	espresso_panel_data.set_gptimer_idle =
-		espresso_lcd_set_gptimer_idle;
+	espresso_panel_data.set_gptimer_idle = espresso_lcd_set_gptimer_idle;
 
 	for (i = 0 ; i < NUM_BRIGHTNESS_LEVEL ; i++) {
 		espresso_panel_data.brightness_table.platform_value[i] =
@@ -266,4 +267,3 @@ void __init omap4_espresso_display_init(void)
 
 	omap_display_init(&espresso_dss_data);
 }
-
