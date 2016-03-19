@@ -1,4 +1,5 @@
-/* Copyright (C) 2012 Samsung Electronics, Inc.
+/*
+ * Copyright (C) 2012 Samsung Electronics, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -140,29 +141,29 @@ static void tsp_set_power(bool on)
 		gpio_set_value(tsp_gpios[GPIO_TOUCH_EN].gpio, 1);
 
 		r = omap4_ctrl_pad_readl(
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
+				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 		r &= ~OMAP4_I2C3_SDA_PULLUPRESX_MASK;
 		r &= ~OMAP4_I2C3_SCL_PULLUPRESX_MASK;
 		omap4_ctrl_pad_writel(r,
 				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 
 		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-			tsp_gpios[GPIO_TOUCH_nINT].gpio);
+				tsp_gpios[GPIO_TOUCH_nINT].gpio);
 
 	} else {
 		pr_debug("tsp: power off.\n");
 		gpio_set_value(tsp_gpios[GPIO_TOUCH_EN].gpio, 0);
 
-		/* Below register settings needed by prevent current leakage. */
+		/* Below register settings needed to prevent current leakage. */
 		r = omap4_ctrl_pad_readl(
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
+				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 		r |= OMAP4_I2C3_SDA_PULLUPRESX_MASK;
 		r |= OMAP4_I2C3_SCL_PULLUPRESX_MASK;
 		omap4_ctrl_pad_writel(r,
 				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 
 		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-			tsp_gpios[GPIO_TOUCH_nINT].gpio);
+				tsp_gpios[GPIO_TOUCH_nINT].gpio);
 	}
 	return;
 }
@@ -262,7 +263,7 @@ static int espresso_create_sec_key_dev(void)
 
 	if (device_create_file(sec_key, &dev_attr_sec_key_pressed) < 0)
 		pr_err("Failed to create device file(%s)!\n",
-		       dev_attr_sec_key_pressed.attr.name);
+			dev_attr_sec_key_pressed.attr.name);
 
 	return 0;
 }
