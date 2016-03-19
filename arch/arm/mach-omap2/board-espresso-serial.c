@@ -98,6 +98,21 @@ static struct platform_device espresso_gpio_i2c6_device = {
 	}
 };
 
+static struct i2c_gpio_platform_data espresso_gpio_i2c8_pdata = {
+	/*.sda_pin      = (MHL_SDA_1.8V),*/
+	/*.scl_pin      = (MHL_SCL_1.8V),*/
+	.udelay         = 3,
+	.timeout	= 0,
+};
+
+static struct platform_device espresso_gpio_i2c8_device = {
+	.name = "i2c-gpio",
+	.id = 8,
+	.dev = {
+		.platform_data = &espresso_gpio_i2c8_pdata,
+	},
+};
+
 static void __init espresso_gpio_i2c_init(void)
 {
 	/* gpio-i2c 6 */
@@ -105,6 +120,13 @@ static void __init espresso_gpio_i2c_init(void)
 		omap_muxtbl_get_gpio_by_name("ADC_I2C_SDA_1.8V");
 	espresso_gpio_i2c6_pdata.scl_pin =
 		omap_muxtbl_get_gpio_by_name("ADC_I2C_SCL_1.8V");
+	if (board_is_espresso10()) {
+		/* gpio-i2c 8 */
+		espresso_gpio_i2c8_pdata.sda_pin =
+			omap_muxtbl_get_gpio_by_name("MHL_SDA_1.8V");
+		espresso_gpio_i2c8_pdata.scl_pin =
+			omap_muxtbl_get_gpio_by_name("MHL_SCL_1.8V");
+	}
 }
 
 enum {
@@ -266,6 +288,10 @@ static struct platform_device *espresso_serial_devices[] __initdata = {
 	&espresso_gpio_i2c6_device,
 };
 
+static struct platform_device *espresso10_serial_devices[] __initdata = {
+	&espresso_gpio_i2c8_device,
+};
+
 void __init omap4_espresso_serial_init(void)
 {
 	espresso_i2c_init();
@@ -274,6 +300,10 @@ void __init omap4_espresso_serial_init(void)
 
 	platform_add_devices(espresso_serial_devices,
 			     ARRAY_SIZE(espresso_serial_devices));
+	if (board_is_espresso10()) {
+		platform_add_devices(espresso10_serial_devices,
+				     ARRAY_SIZE(espresso10_serial_devices));
+	}
 }
 
 int __init omap4_espresso_serial_late_init(void)
