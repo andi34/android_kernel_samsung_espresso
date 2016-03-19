@@ -555,6 +555,16 @@ static void espresso_con_charger_detached(void)
 {
 }
 
+static void espresso_deskdock_attached(void)
+{
+	espresso_set_dock_switch(UEVENT_DOCK_DESK);
+}
+
+static void espresso_deskdock_detached(void)
+{
+	espresso_set_dock_switch(UEVENT_DOCK_NONE);
+}
+
 static void espresso_30pin_detected(int device, bool connected)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
@@ -586,10 +596,10 @@ static void espresso_30pin_detected(int device, bool connected)
 		break;
 	case P30_DESKDOCK:
 		if (connected) {
-			espresso_set_dock_switch(UEVENT_DOCK_DESK);
+			espresso_deskdock_attached();
 			notify_dock_status(1);
 		} else {
-			espresso_set_dock_switch(UEVENT_DOCK_NONE);
+			espresso_deskdock_detached();
 			notify_dock_status(0);
 		}
 		break;
