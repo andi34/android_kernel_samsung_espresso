@@ -168,7 +168,8 @@ int __init omap4_espresso_vibrator_init(void)
 		    omap_muxtbl_get_gpio_by_name(vibrator_gpio[i].label);
 	gpio_request_array(vibrator_gpio, ARRAY_SIZE(vibrator_gpio));
 
-	if (system_rev >= 6)
+	if ((!board_is_espresso10() && system_rev >= 6) ||
+	    (board_is_espresso10() && system_rev >= 5))
 		ret = vibrator_init();
 	if (ret < 0) {
 		pr_err("vib: vibrator_init fail.");
