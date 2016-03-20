@@ -19,6 +19,7 @@
 #include <linux/kernel.h>
 #include <linux/omapfb.h>
 #include <linux/regulator/consumer.h>
+#include <linux/platform_data/panel-ltn.h>
 #include <linux/platform_data/panel-ltn070nl01.h>
 
 #include <plat/vram.h>
@@ -40,7 +41,7 @@
 
 #define ESPRESSO_FB_RAM_SIZE		SZ_16M	/* ~1280*720*4 * 2 */
 
-static struct ltn070nl01_panel_data espresso_panel_data;
+static struct ltn_panel_data espresso_panel_data;
 
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 static struct clk *dss_ick, *dss_sys_fclk, *dss_dss_fclk;
@@ -165,7 +166,7 @@ __setup("lcd_panel_id=", setup_current_panel);
 
 void __init omap4_espresso_display_init(void)
 {
-	struct ltn070nl01_panel_data *panel;
+	struct ltn_panel_data *panel;
 	int ret, i;
 
 	/* Default setting value for BOE panel*/
