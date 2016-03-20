@@ -11,4 +11,4 @@
 */
 #include <linux/types.h>
 
-enum { PANEL_AUO, PANEL_HYDIS, PANEL_BOE, PANEL_LCD };
+enum { PANEL_AUO, PANEL_HYDIS, PANEL_BOE_10, PANEL_LCD };
