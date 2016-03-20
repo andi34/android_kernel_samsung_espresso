@@ -21,6 +21,7 @@
 #include <linux/gp2a.h>
 #include <linux/i2c/twl6030-madc.h>
 #include <linux/regulator/consumer.h>
+#include <linux/bh1721fvc.h>
 #include <linux/yas.h>
 #include <linux/al3201.h>
 
@@ -28,6 +29,8 @@
 
 #define YAS_TA_OFFSET_ESPRESSO {0, 0, 0}
 #define YAS_USB_OFFSET_ESPRESSO {0, 0, 0}
+#define YAS_TA_OFFSET_ESPRESSO10 {200, -4600, -1100}
+#define YAS_USB_OFFSET_ESPRESSO10 {0, -1100, -300}
 #define YAS_FULL_OFFSET {0, 0, 0}
 
 enum {
@@ -49,6 +52,30 @@ struct gpio sensors_gpios[] = {
 		.flags = GPIOF_IN,
 		.label = "MSENSE_IRQ",
 	},
+};
+
+static int bh1721fvc_light_sensor_reset(void)
+{
+	pr_info("%s\n", __func__);
+
+	omap_mux_init_gpio(sensors_gpios[NUM_ALS_INT].gpio,
+		OMAP_PIN_OUTPUT);
+
+	gpio_free(sensors_gpios[NUM_ALS_INT].gpio);
+
+	gpio_request(sensors_gpios[NUM_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
+
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 0);
+
+	udelay(2);
+
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 1);
+
+	return 0;
+}
+
+static struct bh1721fvc_platform_data bh1721fvc_pdata = {
+	.reset = bh1721fvc_light_sensor_reset,
 };
 
 #define GP2A_LIGHT_ADC_CHANNEL	4
@@ -142,6 +169,13 @@ static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo[] = {
 	},
 };
 
+static struct i2c_board_info __initdata espresso10_sensors_i2c4_boardinfo[] = {
+	{
+		I2C_BOARD_INFO("bh1721fvc", 0x23),
+		.platform_data = &bh1721fvc_pdata,
+	},
+};
+
 static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_rf[] = {
 	{
 		I2C_BOARD_INFO("gp2a", 0x44),
@@ -187,20 +221,32 @@ void __init omap4_espresso_sensors_init(void)
 
 	gp2a_pdata.p_out = sensors_gpios[NUM_PS_VOUT].gpio;
 
-	if (system_rev < 7) {
-		i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
-			ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
-	} else {
-		if (board_has_modem()) {
-			i2c_register_board_info(4,
-				espresso_sensors_i2c4_boardinfo_rf,
-				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_rf));
+	if (!board_is_espresso10()) {
+		if (system_rev < 7) {
+			i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
+				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
 		} else {
-			i2c_register_board_info(4,
-				espresso_sensors_i2c4_boardinfo_wf,
-				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_wf));
+			if (board_has_modem()) {
+				i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo_rf,
+					ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_rf));
+			} else {
+				i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo_wf,
+					ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_wf));
+			}
 		}
+	} else {
+		int32_t ta_offset_espresso10[] = YAS_TA_OFFSET_ESPRESSO10;
+		int32_t usb_offset_espresso10[] = YAS_USB_OFFSET_ESPRESSO10;
+		magnetic_pdata.ta_offset.v[0] = ta_offset_espresso10[0];
+		magnetic_pdata.ta_offset.v[1] = ta_offset_espresso10[1];
+		magnetic_pdata.ta_offset.v[2] = ta_offset_espresso10[2];
+		magnetic_pdata.usb_offset.v[0] = usb_offset_espresso10[0];
+		magnetic_pdata.usb_offset.v[1] = usb_offset_espresso10[1];
+		magnetic_pdata.usb_offset.v[2] = usb_offset_espresso10[2];
+		i2c_register_board_info(4, espresso10_sensors_i2c4_boardinfo,
+			ARRAY_SIZE(espresso10_sensors_i2c4_boardinfo));
 	}
+
 	i2c_register_board_info(4, espresso_common_sensors_i2c4_boardinfo,
 			ARRAY_SIZE(espresso_common_sensors_i2c4_boardinfo));
 }
