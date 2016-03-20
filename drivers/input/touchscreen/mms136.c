@@ -218,7 +218,7 @@ static bool fw_updater(struct ts_data *ts, char const *mode)
 		u8 *fw_data;
 		struct file *filp;
 		mm_segment_t oldfs;
-		char file_name[20] = "/sdcard/";
+		char file_name[20] = "/sdcard/mms136.bin";
 
 		tsp_log("force upload from external file.");
 
@@ -913,7 +913,7 @@ static void run_intensity_read(void *device_data)
 	return;
 }
 
-struct tsp_cmd tsp_cmds[] = {
+struct tsp_cmd tsp_cmds_mms[] = {
 	{TSP_CMD("fw_update", fw_update),},
 	{TSP_CMD("get_fw_ver_bin", get_fw_ver_bin),},
 	{TSP_CMD("get_fw_ver_ic", get_fw_ver_ic),},
@@ -1400,8 +1400,8 @@ static int __devinit ts_probe(struct i2c_client *client,
 	}
 
 	INIT_LIST_HEAD(&factory_data->cmd_list_head);
-	for (i = 0; i < ARRAY_SIZE(tsp_cmds); i++)
-		list_add_tail(&tsp_cmds[i].list, &factory_data->cmd_list_head);
+	for (i = 0; i < ARRAY_SIZE(tsp_cmds_mms); i++)
+		list_add_tail(&tsp_cmds_mms[i].list, &factory_data->cmd_list_head);
 
 	mutex_init(&factory_data->cmd_lock);
 	factory_data->cmd_is_running = false;
