@@ -26,8 +26,8 @@
 
 #include "board-espresso.h"
 
-#define YAS_TA_OFFSET {0, 0, 0}
-#define YAS_USB_OFFSET {0, 0, 0}
+#define YAS_TA_OFFSET_ESPRESSO {0, 0, 0}
+#define YAS_USB_OFFSET_ESPRESSO {0, 0, 0}
 #define YAS_FULL_OFFSET {0, 0, 0}
 
 enum {
@@ -112,8 +112,8 @@ struct mag_platform_data magnetic_pdata = {
 	.power_on = omap4_espresso_sensors_regulator_on,
 	.offset_enable = 0,
 	.chg_status = CABLE_TYPE_NONE,
-	.ta_offset.v = YAS_TA_OFFSET,
-	.usb_offset.v = YAS_USB_OFFSET,
+	.ta_offset.v = YAS_TA_OFFSET_ESPRESSO,
+	.usb_offset.v = YAS_USB_OFFSET_ESPRESSO,
 	.full_offset.v = YAS_FULL_OFFSET,
 };
 
@@ -133,14 +133,6 @@ static struct al3201_platform_data al3201_pdata = {
 
 static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo[] = {
 	{
-		I2C_BOARD_INFO("accelerometer", 0x18),
-		.platform_data = &accelerometer_pdata,
-	 },
-	{
-		I2C_BOARD_INFO("geomagnetic", 0x2e),
-		.platform_data = &magnetic_pdata,
-	 },
-	{
 		I2C_BOARD_INFO("gp2a", 0x44),
 		.platform_data = &gp2a_pdata,
 	},
@@ -152,14 +144,6 @@ static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo[] = {
 
 static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_rf[] = {
 	{
-		I2C_BOARD_INFO("accelerometer", 0x18),
-		.platform_data = &accelerometer_pdata,
-	 },
-	{
-		I2C_BOARD_INFO("geomagnetic", 0x2e),
-		.platform_data = &magnetic_pdata,
-	 },
-	{
 		I2C_BOARD_INFO("gp2a", 0x44),
 		.platform_data = &gp2a_pdata,
 	},
@@ -167,19 +151,21 @@ static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_rf[] = {
 
 static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_wf[] = {
 	{
-		I2C_BOARD_INFO("accelerometer", 0x18),
-		.platform_data = &accelerometer_pdata,
-	 },
-	{
-		I2C_BOARD_INFO("geomagnetic", 0x2e),
-		.platform_data = &magnetic_pdata,
-	 },
-	{
 		I2C_BOARD_INFO("AL3201", 0x1c),
 		.platform_data = &al3201_pdata,
 	},
 };
 
+static struct i2c_board_info __initdata espresso_common_sensors_i2c4_boardinfo[] = {
+	{
+		I2C_BOARD_INFO("accelerometer", 0x18),
+		.platform_data = &accelerometer_pdata,
+	},
+	{
+		I2C_BOARD_INFO("geomagnetic", 0x2e),
+		.platform_data = &magnetic_pdata,
+	},
+};
 
 void __init omap4_espresso_sensors_init(void)
 {
@@ -215,5 +201,6 @@ void __init omap4_espresso_sensors_init(void)
 				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_wf));
 		}
 	}
+	i2c_register_board_info(4, espresso_common_sensors_i2c4_boardinfo,
+			ARRAY_SIZE(espresso_common_sensors_i2c4_boardinfo));
 }
-

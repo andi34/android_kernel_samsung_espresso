@@ -28,8 +28,8 @@
 #include "board-espresso10.h"
 
 
-#define YAS_TA_OFFSET {200, -4600, -1100}
-#define YAS_USB_OFFSET {0, -1100, -300}
+#define YAS_TA_OFFSET_ESPRESSO10 {200, -4600, -1100}
+#define YAS_USB_OFFSET_ESPRESSO10 {0, -1100, -300}
 #define YAS_FULL_OFFSET {0, 0, 0}
 
 enum {
@@ -82,8 +82,8 @@ static struct bh1721fvc_platform_data bh1721fvc_pdata = {
 struct mag_platform_data magnetic_pdata = {
 	.offset_enable = 0,
 	.chg_status = CABLE_TYPE_NONE,
-	.ta_offset.v = YAS_TA_OFFSET,
-	.usb_offset.v = YAS_USB_OFFSET,
+	.ta_offset.v = YAS_TA_OFFSET_ESPRESSO10,
+	.usb_offset.v = YAS_USB_OFFSET_ESPRESSO10,
 	.full_offset.v = YAS_FULL_OFFSET,
 };
 
@@ -135,20 +135,21 @@ struct acc_platform_data accelerometer_pdata = {
 	.ldo_on = omap4_espresso_sensors_regulator_on,
 };
 
-static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo[] = {
+static struct i2c_board_info __initdata espresso10_sensors_i2c4_boardinfo[] = {
+	{
+		I2C_BOARD_INFO("bh1721fvc", 0x23),
+		.platform_data = &bh1721fvc_pdata,
+	 },
+};
+
+static struct i2c_board_info __initdata espresso_common_sensors_i2c4_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("accelerometer", 0x18),
 		.platform_data = &accelerometer_pdata,
 	 },
-
 	{
 		I2C_BOARD_INFO("geomagnetic", 0x2e),
 		.platform_data = &magnetic_pdata,
-	 },
-
-	{
-		I2C_BOARD_INFO("bh1721fvc", 0x23),
-		.platform_data = &bh1721fvc_pdata,
 	 },
 };
 
@@ -170,8 +171,9 @@ void __init omap4_espresso_sensors_init(void)
 
 	gpio_direction_output(sensors_gpios[NUM_MSENSE_IRQ].gpio, 1);
 
-	i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
-				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
+	i2c_register_board_info(4, espresso10_sensors_i2c4_boardinfo,
+				ARRAY_SIZE(espresso10_sensors_i2c4_boardinfo));
 
+	i2c_register_board_info(4, espresso_common_sensors_i2c4_boardinfo,
+			ARRAY_SIZE(espresso_common_sensors_i2c4_boardinfo));
 }
-
