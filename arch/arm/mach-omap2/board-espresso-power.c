@@ -31,7 +31,7 @@
 #include <linux/battery.h>
 #include <linux/irq.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
 #include "sec_common.h"
@@ -54,6 +54,11 @@
 #define HIGH_RECOVER_TEMP       420
 #define LOW_BLOCK_TEMP          (-50)
 #define LOW_RECOVER_TEMP        0
+
+#define BB_HIGH_BLOCK_TEMP         480
+#define BB_HIGH_RECOVER_TEMP       440
+#define BB_LOW_BLOCK_TEMP          (-40)
+#define BB_LOW_RECOVER_TEMP        0
 
 struct max17042_fuelgauge_callbacks *fuelgauge_callback;
 struct smb_charger_callbacks *espresso_charger_callbacks;
@@ -203,9 +208,9 @@ static struct smb_charger_data smb_pdata = {
 	.register_callbacks = smb_charger_register_callbacks,
 };
 
-static const __initdata struct i2c_board_info smb136_i2c[] = {
+static const __initdata struct i2c_board_info smb347_i2c[] = {
 	{
-		I2C_BOARD_INFO("smb136-charger", 0x4D), /* 9A >> 1 */
+		I2C_BOARD_INFO("smb347-charger", 0x0C >> 1),
 		.platform_data = &smb_pdata,
 	},
 };
@@ -219,9 +224,6 @@ static void max17042_fuelgauge_register_callbacks(
 static struct max17042_platform_data max17042_pdata = {
 	.register_callbacks = &max17042_fuelgauge_register_callbacks,
 	.enable_current_sense = true,
-	.sdi_capacity = 0x1F40,
-	.sdi_vfcapacity = 0x29AB,
-	.sdi_low_bat_comp_start_vol = 3550,
 };
 
 static const __initdata struct i2c_board_info max17042_i2c[] = {
@@ -378,11 +380,14 @@ void __init omap4_espresso_charger_init(void)
 
 	charger_gpio_init();
 	espresso_gpio_i2c_init();
+	if (board_is_bestbuy_variant() && sec_bootmode == 5) {
+		battery_manager_pdata.high_block_temp = BB_HIGH_BLOCK_TEMP;
+		battery_manager_pdata.high_recover_temp = BB_HIGH_RECOVER_TEMP;
+		battery_manager_pdata.low_block_temp = BB_LOW_BLOCK_TEMP;
+		battery_manager_pdata.low_recover_temp = BB_LOW_RECOVER_TEMP;
+	}
 
 	battery_manager_pdata.bootmode = sec_bootmode;
-	smb_pdata.hw_revision = system_rev;
-	pr_info("%s: HW REVISION : %x\n",
-		__func__, smb_pdata.hw_revision);
 
 	battery_manager_pdata.ta_gpio =
 			omap_muxtbl_get_gpio_by_name("TA_nCONNECTED");
@@ -398,7 +403,14 @@ void __init omap4_espresso_charger_init(void)
 	if (ret < 0)
 		pr_err("%s: gpio_i2c7 device register fail\n", __func__);
 
-	i2c_register_board_info(5, smb136_i2c, ARRAY_SIZE(smb136_i2c));
+	i2c_register_board_info(5, smb347_i2c, ARRAY_SIZE(smb347_i2c));
+	max17042_pdata.sdi_capacity = 0x3730;
+	max17042_pdata.sdi_vfcapacity = 0x4996;
+	max17042_pdata.byd_capacity = 0x36B0;
+	max17042_pdata.byd_vfcapacity = 0x48EA;
+	max17042_pdata.sdi_low_bat_comp_start_vol = 3600;
+	max17042_pdata.byd_low_bat_comp_start_vol = 3650;
+
 	i2c_register_board_info(7, max17042_i2c, ARRAY_SIZE(max17042_i2c));
 
 	ret = platform_device_register(&battery_manager_device);

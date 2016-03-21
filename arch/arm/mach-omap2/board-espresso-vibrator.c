@@ -1,4 +1,4 @@
-/* arch/arm/mach-omap2/board-espresso-vibrator.c
+/* arch/arm/mach-omap2/board-espresso10-vibrator.c
  *
  * Copyright (C) 2012 Samsung Electronics Co. Ltd. All Rights Reserved.
  *
@@ -24,7 +24,7 @@
 #include "mux.h"
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
-#include "board-espresso.h"
+#include "board-espresso10.h"
 
 #define MAX_TIMEOUT		10000 /* 10sec */
 
@@ -168,7 +168,7 @@ int __init omap4_espresso_vibrator_init(void)
 		    omap_muxtbl_get_gpio_by_name(vibrator_gpio[i].label);
 	gpio_request_array(vibrator_gpio, ARRAY_SIZE(vibrator_gpio));
 
-	if (system_rev >= 6)
+	if (system_rev >= 5)
 		ret = vibrator_init();
 	if (ret < 0) {
 		pr_err("vib: vibrator_init fail.");

@@ -1,4 +1,6 @@
-/* arch/arm/mach-omap2/board-espresso-sdio.c
+/* arch/arm/mach-omap2/board-espresso10-sdio.c
+ *
+ * Based on mach-omap2/board-espresso-sdio.c
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd.
  *
@@ -20,7 +22,7 @@
 #include <plat/irqs.h>
 #include <plat/mmc.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include <linux/gpio.h>
 #include "mux.h"
 #include "omap_muxtbl.h"

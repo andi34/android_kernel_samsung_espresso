@@ -1,8 +1,8 @@
-/* arch/arm/mach-omap2/board-espresso-wifi.c
+/* arch/arm/mach-omap2/board-espresso10-wifi.c
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd.
  *
- * Based on mach-omap2/board-tuna-wifi.c
+ * Based on mach-omap2/board-espresso-wifi.c
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -35,7 +35,7 @@
 #include <linux/random.h>
 #include <linux/jiffies.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "control.h"
 #include "hsmmc.h"
 #include "mux.h"

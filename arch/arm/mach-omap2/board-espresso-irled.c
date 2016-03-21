@@ -1,4 +1,4 @@
-/* arch/arm/mach-omap2/board-espresso-irled.c
+/* arch/arm/mach-omap2/board-espresso10-irled.c
  *
  * Copyright (C) 2012 Samsung Electronics Co. Ltd. All Rights Reserved.
  *
@@ -21,7 +21,7 @@
 #include "mux.h"
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
-#include "board-espresso.h"
+#include "board-espresso10.h"
 
 #define CLOCK_VALUE 800000
 #define ON_OFFSET_VALUE -2
@@ -312,8 +312,18 @@ int __init omap4_espresso_irled_init(void)
 {
 	int ret = 0;
 	int i;
-	if (system_rev > 6 && !board_is_bestbuy_variant())
+
+	if (system_rev > 6 && !board_is_bestbuy_variant()) {
+		for (i = 0; i < ARRAY_SIZE(irled_gpios); i++) {
+			irled_gpios[i].gpio =
+			omap_muxtbl_get_gpio_by_name(irled_gpios[i].label);
+			omap_mux_set_gpio(
+				OMAP_PIN_INPUT_PULLDOWN | OMAP_MUX_MODE7,
+				irled_gpios[i].gpio);
+		}
+
 		return 0;
+	}
 
 	for (i = 0; i < ARRAY_SIZE(irled_gpios); i++)
 		irled_gpios[i].gpio =

@@ -13,7 +13,7 @@
 #include <linux/init.h>
 
 #include <mach/emif.h>
-#include "board-espresso.h"
+#include "board-espresso10.h"
 
 const struct lpddr2_timings lpddr2_samsung_timings_400_mhz = {
 	.max_freq	= 400000000,

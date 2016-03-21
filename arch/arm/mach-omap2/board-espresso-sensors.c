@@ -1,6 +1,8 @@
-/* Sensor support for Samsung Tuna Board.
+/* arch/arm/mach-omap2/board-espresso10-sensor.c
  *
- * Copyright (C) 2011 Google, Inc.
+ * Copyright (C) 2011 Samsung Electronics Co, Ltd.
+ *
+ * Based on mach-omap2/board-espresso-sensor.c
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -18,16 +20,16 @@
 #include "mux.h"
 #include "omap_muxtbl.h"
 
-#include <linux/gp2a.h>
 #include <linux/i2c/twl6030-madc.h>
 #include <linux/regulator/consumer.h>
+#include <linux/bh1721fvc.h>
 #include <linux/yas.h>
-#include <linux/al3201.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 
-#define YAS_TA_OFFSET {0, 0, 0}
-#define YAS_USB_OFFSET {0, 0, 0}
+
+#define YAS_TA_OFFSET {200, -4600, -1100}
+#define YAS_USB_OFFSET {0, -1100, -300}
 #define YAS_FULL_OFFSET {0, 0, 0}
 
 enum {
@@ -51,19 +53,47 @@ struct gpio sensors_gpios[] = {
 	},
 };
 
-#define GP2A_LIGHT_ADC_CHANNEL	4
-
-static int gp2a_light_adc_value(void)
+static int bh1721fvc_light_sensor_reset(void)
 {
-	if (system_rev >= 6)
-		return twl6030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL)/4;
-	else
-		return twl6030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL);
+
+	printk(KERN_INFO " bh1721_light_sensor_reset !!\n");
+
+	omap_mux_init_gpio(sensors_gpios[NUM_ALS_INT].gpio,
+		OMAP_PIN_OUTPUT);
+
+	gpio_free(sensors_gpios[NUM_ALS_INT].gpio);
+
+	gpio_request(sensors_gpios[NUM_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
+
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 0);
+
+	udelay(2);
+
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 1);
+
+	return 0;
+
 }
 
-static void gp2a_power(bool on)
-{
+static struct bh1721fvc_platform_data bh1721fvc_pdata = {
+	.reset = bh1721fvc_light_sensor_reset,
+};
 
+struct mag_platform_data magnetic_pdata = {
+	.offset_enable = 0,
+	.chg_status = CABLE_TYPE_NONE,
+	.ta_offset.v = YAS_TA_OFFSET,
+	.usb_offset.v = YAS_USB_OFFSET,
+	.full_offset.v = YAS_FULL_OFFSET,
+};
+
+void omap4_espresso_set_chager_type(int type)
+{
+	static int prev = CABLE_TYPE_NONE;
+	magnetic_pdata.chg_status = type;
+	if (prev != type)
+		magnetic_pdata.offset_enable = 1;
+	prev = type;
 }
 
 static void omap4_espresso_sensors_regulator_on(bool on)
@@ -96,30 +126,8 @@ static void omap4_espresso_sensors_regulator_on(bool on)
 	}
 	regulator_put(reg_v28);
 	regulator_put(reg_v18);
-	msleep(20);
 done:
 	return;
-}
-
-static struct gp2a_platform_data gp2a_pdata = {
-	.power = gp2a_power,
-	.p_out = 0,
-	.light_adc_value = gp2a_light_adc_value,
-	.ldo_on = omap4_espresso_sensors_regulator_on,
-};
-
-struct mag_platform_data magnetic_pdata = {
-	.power_on = omap4_espresso_sensors_regulator_on,
-	.offset_enable = 0,
-	.chg_status = CABLE_TYPE_NONE,
-	.ta_offset.v = YAS_TA_OFFSET,
-	.usb_offset.v = YAS_USB_OFFSET,
-	.full_offset.v = YAS_FULL_OFFSET,
-};
-
-void omap4_espresso_set_chager_type(int type)
-{
-	magnetic_pdata.chg_status = type;
 }
 
 struct acc_platform_data accelerometer_pdata = {
@@ -127,59 +135,22 @@ struct acc_platform_data accelerometer_pdata = {
 	.ldo_on = omap4_espresso_sensors_regulator_on,
 };
 
-static struct al3201_platform_data al3201_pdata = {
-	.power_on = omap4_espresso_sensors_regulator_on,
-};
-
 static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("accelerometer", 0x18),
 		.platform_data = &accelerometer_pdata,
 	 },
+
 	{
 		I2C_BOARD_INFO("geomagnetic", 0x2e),
 		.platform_data = &magnetic_pdata,
 	 },
-	{
-		I2C_BOARD_INFO("gp2a", 0x44),
-		.platform_data = &gp2a_pdata,
-	},
-	{
-		I2C_BOARD_INFO("AL3201", 0x1c),
-		.platform_data = &al3201_pdata,
-	},
-};
 
-static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_rf[] = {
 	{
-		I2C_BOARD_INFO("accelerometer", 0x18),
-		.platform_data = &accelerometer_pdata,
+		I2C_BOARD_INFO("bh1721fvc", 0x23),
+		.platform_data = &bh1721fvc_pdata,
 	 },
-	{
-		I2C_BOARD_INFO("geomagnetic", 0x2e),
-		.platform_data = &magnetic_pdata,
-	 },
-	{
-		I2C_BOARD_INFO("gp2a", 0x44),
-		.platform_data = &gp2a_pdata,
-	},
 };
-
-static struct i2c_board_info __initdata espresso_sensors_i2c4_boardinfo_wf[] = {
-	{
-		I2C_BOARD_INFO("accelerometer", 0x18),
-		.platform_data = &accelerometer_pdata,
-	 },
-	{
-		I2C_BOARD_INFO("geomagnetic", 0x2e),
-		.platform_data = &magnetic_pdata,
-	 },
-	{
-		I2C_BOARD_INFO("AL3201", 0x1c),
-		.platform_data = &al3201_pdata,
-	},
-};
-
 
 void __init omap4_espresso_sensors_init(void)
 {
@@ -199,21 +170,8 @@ void __init omap4_espresso_sensors_init(void)
 
 	gpio_direction_output(sensors_gpios[NUM_MSENSE_IRQ].gpio, 1);
 
-	gp2a_pdata.p_out = sensors_gpios[NUM_PS_VOUT].gpio;
+	i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
+				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
 
-	if (system_rev < 7) {
-		i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
-			ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
-	} else {
-		if (board_has_modem()) {
-			i2c_register_board_info(4,
-				espresso_sensors_i2c4_boardinfo_rf,
-				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_rf));
-		} else {
-			i2c_register_board_info(4,
-				espresso_sensors_i2c4_boardinfo_wf,
-				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_wf));
-		}
-	}
 }
 

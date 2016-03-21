@@ -1,8 +1,8 @@
-/* arch/arm/mach-omap2/board-espresso.c
+/* arch/arm/mach-omap2/board-espresso10.c
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd.
  *
- * Based on mach-omap2/board-tuna.c
+ * Based on mach-omap2/board-espresso.c
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -45,7 +45,7 @@
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "control.h"
 #include "mux.h"
 #include "omap4-sar-layout.h"
@@ -53,6 +53,14 @@
 
 #include "sec_common.h"
 #include "sec_muxtbl.h"
+
+/* gpio to distinguish WiFi and USA-BBY
+ *
+ * HW_REV4 | HIGH | LOW
+ * --------+------+------
+ *         |IrDA O|IrDA X
+ */
+#define GPIO_HW_REV4		41
 
 #define ESPRESSO_MEM_BANK_0_SIZE	0x20000000
 #define ESPRESSO_MEM_BANK_0_ADDR	0x80000000
@@ -222,6 +230,19 @@ static void __init omap4_espresso_reboot_init(void)
 		register_reboot_notifier(&espresso_reboot_notifier);
 }
 
+static void __init espresso10_update_board_type(void)
+{
+	/* because omap4_mux_init is not called when this function is
+	 * called, padconf reg must be configured by low-level function. */
+	omap_writew(OMAP_MUX_MODE3 | OMAP_PIN_INPUT,
+		    OMAP4_CTRL_MODULE_PAD_CORE_MUX_PBASE +
+		    OMAP4_CTRL_MODULE_PAD_GPMC_A17_OFFSET);
+
+	gpio_request(GPIO_HW_REV4, "HW_REV4");
+	if (gpio_get_value(GPIO_HW_REV4))
+		_board_is_bestbuy_variant = true;
+}
+
 static ssize_t espresso_soc_family_show(struct kobject *kobj,
 				    struct kobj_attribute *attr, char *buf)
 {
@@ -352,9 +373,12 @@ err_board_obj:
 static void __init espresso_init(void)
 {
 	sec_common_init_early();
+	espresso10_update_board_type();
 
 	omap4_espresso_emif_init();
-	sec_muxtbl_init(SEC_MACHINE_ESPRESSO, system_rev);
+	if (board_is_bestbuy_variant() && system_rev >= 7)
+		sec_muxtbl_init(SEC_MACHINE_ESPRESSO10_USA_BBY, system_rev);
+	sec_muxtbl_init(SEC_MACHINE_ESPRESSO10, system_rev);
 
 	/* initialize sec common infrastructures */
 	sec_common_init();
@@ -369,14 +393,15 @@ static void __init espresso_init(void)
 #ifdef CONFIG_ION_OMAP
 	omap4_register_ion();
 #endif
-	platform_add_devices(espresso_devices, ARRAY_SIZE(espresso_devices));
+	platform_add_devices(espresso_devices,
+			     ARRAY_SIZE(espresso_devices));
 	omap_dmm_init();
 	omap4_espresso_sdio_init();
 	usb_musb_init(&musb_board_data);
 	omap4_espresso_connector_init();
+	omap4_espresso_wifi_init();
 	omap4_espresso_display_init();
 	omap4_espresso_input_init();
-	omap4_espresso_wifi_init();
 	omap4_espresso_sensors_init();
 	omap4_espresso_jack_init();
 	omap4_espresso_reboot_init();
@@ -403,11 +428,11 @@ static void omap4_espresso_init_carveout_sizes(
 		struct omap_ion_platform_data *ion)
 {
 	ion->tiler1d_size = (SZ_1M * 14);
-	/* WFD is not supported in espresso So the size is zero */
+	/* WFD is not supported in espresso10 So the size is zero */
 	ion->secure_output_wfdhdcp_size = 0;
 	ion->ducati_heap_size = (SZ_1M * 65);
 #ifndef CONFIG_ION_OMAP_TILER_DYNAMIC_ALLOC
-	ion->nonsecure_tiler2d_size = (SZ_1M * 8);
+	ion->nonsecure_tiler2d_size = (SZ_1M * 19);
 	ion->tiler2d_size = (SZ_1M * 81);
 #endif
 }
@@ -436,7 +461,7 @@ static void __init espresso_reserve(void)
 	omap_reserve();
 }
 
-MACHINE_START(OMAP4_SAMSUNG, "Espresso")
+MACHINE_START(OMAP4_SAMSUNG, "Espresso10")
 	/* Maintainer: Samsung Electronics Co, Ltd. */
 	.boot_params	= 0x80000100,
 	.reserve	= espresso_reserve,

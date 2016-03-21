@@ -1,6 +1,8 @@
-/* arch/arm/mach-omap2/board-espresso.h
+/* arch/arm/mach-omap2/board-espresso10.h
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd.
+ *
+ * Based on mach-omap2/board-espresso.h
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -36,10 +38,8 @@ unsigned int omap4_espresso_get_board_type(void);
 
 /** @category LCD, HDMI */
 void omap4_espresso_display_init(void);
+void omap4_espresso_display_early_init(void);
 void omap4_espresso_memory_display_init(void);
-
-/** @category LCD */
-void __init omap4_espresso_display_early_init(void);
 
 /** @category Key, TSP, Touch-Key */
 void omap4_espresso_input_init(void);
@@ -55,7 +55,7 @@ void omap4_espresso_power_init(void);
 void omap4_espresso_sensors_init(void);
 void omap4_espresso_set_chager_type(int type);
 
-/** @category mUSB-IC, MHL */
+/** @category mUSB-IC, USB-OTG */
 void omap4_espresso_connector_init(void);
 int omap4_espresso_get_adc(enum espresso_adc_ch ch);
 void omap4_espresso_usb_detected(int cable_type);
@@ -63,11 +63,11 @@ void omap4_espresso_usb_detected(int cable_type);
 /** @category LPDDR2 */
 void omap4_espresso_emif_init(void);
 
+/** @category I2c, UART(GPS) */
+void omap4_espresso_serial_init(void);
+
 /** @category TWL6030, TWL6040 */
 void omap4_espresso_pmic_init(void);
-
-/** @category I2C, UART(GPS) */
-void omap4_espresso_serial_init(void);
 
 /** @category MMCHS, WiFi */
 void omap4_espresso_sdio_init(void);

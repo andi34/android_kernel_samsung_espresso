@@ -1,4 +1,4 @@
-/* arch/arm/mach-omap2/board-espresso-display.c
+/* arch/arm/mach-omap2/board-espresso10-display.c
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd.
  *
@@ -20,7 +20,7 @@
 #include <linux/omapfb.h>
 #include <linux/regulator/consumer.h>
 #include <linux/platform_data/panel-ltn.h>
-#include <linux/platform_data/panel-ltn070nl01.h>
+#include <linux/platform_data/panel-ltn101al03.h>
 
 #include <plat/vram.h>
 #include <plat/omap_hwmod.h>
@@ -29,7 +29,7 @@
 #include <video/omapdss.h>
 #include <video/omap-panel-generic-dpi.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "control.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
@@ -40,6 +40,10 @@
 #endif
 
 #define ESPRESSO_FB_RAM_SIZE		SZ_16M	/* ~1280*720*4 * 2 */
+
+static struct ltn_panel_data espresso_panel_data = {
+	.panel_id = PANEL_SEC,
+};
 
 static struct ltn_panel_data espresso_panel_data;
 
@@ -76,7 +80,7 @@ static void dss_clks_disable(void)
 
 static struct omap_dss_device espresso_lcd_device = {
 	.name			= "lcd",
-	.driver_name		= "ltn070nl01_panel",
+	.driver_name		= "ltn101al03_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
 	.phy.dpi.data_lines	= 24,
 	.data			= &espresso_panel_data,
@@ -89,28 +93,53 @@ static struct omap_dss_device espresso_lcd_device = {
 #endif
 	.panel = {
 		.timings	= {
-			.x_res		= 1024,
-			.y_res		= 600,
-			.pixel_clock	= 56000,
-			.hfp		= 186,
-			.hsw		= 50,
-			.hbp		= 210,
-			.vfp		= 24,
-			.vsw		= 10,
+			.x_res		= 1280,
+			.y_res		= 800,
+			.pixel_clock	= 69000,
+			.hfp		= 16,
+			.hsw		= 48,
+			.hbp		= 64,
+			.vfp		= 16,
+			.vsw		= 3,
 			.vbp		= 11,
 		},
-		.width_in_um	= 153600,
-		.height_in_um	= 90000,
+		.width_in_um	= 216960,
+		.height_in_um	= 135600,
 	},
+};
 
+static void __init espresso_hdmi_mux_init(void)
+{
+	u32 r;
+	/* strong pullup on DDC lines using unpublished register */
+	r = OMAP4_HDMI_DDC_SCL_PULLUPRESX_MASK
+			| OMAP4_HDMI_DDC_SDA_PULLUPRESX_MASK;
+	omap4_ctrl_pad_writel(r, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_1);
+}
+
+static struct omap_dss_device espresso_hdmi_device = {
+	.name = "hdmi",
+	.driver_name = "hdmi_panel",
+	.type = OMAP_DISPLAY_TYPE_HDMI,
+	.clocks = {
+		.dispc  = {
+			.dispc_fclk_src = OMAP_DSS_CLK_SRC_FCK,
+		},
+		.hdmi = {
+			.regn = 15,
+			.regm2 = 1,
+			.max_pixclk_khz = 75000,
+		},
+	},
+	.channel = OMAP_DSS_CHANNEL_DIGIT,
 };
 
 static struct omap_dss_device *espresso_dss_devices[] = {
 	&espresso_lcd_device,
+	&espresso_hdmi_device,
 };
 
 static struct omap_dss_board_info espresso_dss_data = {
-	.num_devices	= ARRAY_SIZE(espresso_dss_devices),
 	.devices	= espresso_dss_devices,
 	.default_device	= &espresso_lcd_device,
 };
@@ -169,11 +198,16 @@ void __init omap4_espresso_display_init(void)
 	struct ltn_panel_data *panel;
 	int ret, i;
 
-	/* Default setting value for BOE panel*/
+	/* Default setting vlaue for SEC panel*/
 	int platform_brightness[] = {
 		BRIGHTNESS_OFF, BRIGHTNESS_DIM, BRIGHTNESS_MIN,
 		BRIGHTNESS_25, BRIGHTNESS_DEFAULT, BRIGHTNESS_MAX};
-	int kernel_brightness[] = {0, 1, 3, 8, 35, 94};
+	int kernel_brightness[] = {0, 3, 3, 8, 47, 81};
+
+	if (espresso_panel_data.panel_id == PANEL_BOE) {
+		kernel_brightness[4] = 47;
+		kernel_brightness[5] = 81;
+	}
 
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 	dss_ick = clk_get(NULL, "ick");
@@ -194,14 +228,6 @@ void __init omap4_espresso_display_init(void)
 		/* return -ENOENT; */
 	 }
 #endif
-
-	if (espresso_panel_data.panel_id == PANEL_LCD) {
-		kernel_brightness[2] = 2;
-		kernel_brightness[3] = 7;
-		kernel_brightness[4] = 30;
-		kernel_brightness[5] = 80;
-	}
-
 	espresso_panel_data.lvds_nshdn_gpio =
 	    omap_muxtbl_get_gpio_by_name("LVDS_nSHDN");
 	espresso_panel_data.lcd_en_gpio =
@@ -229,6 +255,16 @@ void __init omap4_espresso_display_init(void)
 	panel = &espresso_panel_data;
 
 	espresso_lcd_device.data = panel;
+
+	if (board_is_bestbuy_variant()) {
+		/* Two DSS devices: LCD & HDMI */
+		espresso_dss_data.num_devices = 2;
+		espresso_hdmi_device.hpd_gpio =
+			omap_muxtbl_get_gpio_by_name("HDMI_HPD");
+		espresso_hdmi_mux_init();
+	} else
+		/* LCD only */
+		espresso_dss_data.num_devices = 1;
 
 	omap_display_init(&espresso_dss_data);
 }

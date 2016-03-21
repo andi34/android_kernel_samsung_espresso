@@ -23,7 +23,7 @@
 #include <mach/omap4-common.h>
 #include <linux/platform_data/modem_v2.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
@@ -123,7 +123,6 @@ enum {
 	GPIO_PDA_ACTIVE,
 	GPIO_PHONE_ACTIVE,
 	GPIO_CP_DUMP_INT,
-	GPIO_SIM_DETECT,
 };
 
 struct gpio modem_gpios[] __initdata = {
@@ -151,10 +150,6 @@ struct gpio modem_gpios[] __initdata = {
 		.flags  = GPIOF_IN,
 		.label  = "CP_DUMP_INT",
 	 },
-	[GPIO_SIM_DETECT] = {
-		.flags  = GPIOF_IN,
-		.label  = "SIM_DETECT",
-	},
 };
 
 static struct omap_board_mux mux_none_modem[] __initdata = {
@@ -209,7 +204,6 @@ static void __init umts_modem_cfg_gpio(void)
 	umts_modem_data.gpio_pda_active = modem_gpios[GPIO_PDA_ACTIVE].gpio;
 	umts_modem_data.gpio_phone_active = modem_gpios[GPIO_PHONE_ACTIVE].gpio;
 	umts_modem_data.gpio_cp_dump_int = modem_gpios[GPIO_CP_DUMP_INT].gpio;
-	umts_modem_data.gpio_sim_detect = modem_gpios[GPIO_SIM_DETECT].gpio;
 
 	pr_debug("umts_modem_cfg_gpio done\n");
 }

@@ -1,6 +1,8 @@
-/* arch/arm/mach-omap2/board-espresso-serial.c
+/* arch/arm/mach-omap2/board-espresso10-serial.c
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd.
+ *
+ * Based on mach-omap2/board-espresso-serial.c
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -20,12 +22,12 @@
 #include <linux/platform_device.h>
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
-#include <linux/hwspinlock.h>
+
 #include <plat/common.h>
 #include <plat/omap_hwmod.h>
 #include <plat/omap-serial.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
 #include "omap44xx_muxtbl.h"
@@ -98,6 +100,21 @@ static struct platform_device espresso_gpio_i2c6_device = {
 	}
 };
 
+static struct i2c_gpio_platform_data espresso_gpio_i2c8_pdata = {
+	/*.sda_pin      = (MHL_SDA_1.8V),*/
+	/*.scl_pin      = (MHL_SCL_1.8V),*/
+	.udelay         = 3,
+	.timeout	= 0,
+};
+
+static struct platform_device espresso_gpio_i2c8_device = {
+	.name = "i2c-gpio",
+	.id = 8,
+	.dev = {
+		.platform_data = &espresso_gpio_i2c8_pdata,
+	},
+};
+
 static void __init espresso_gpio_i2c_init(void)
 {
 	/* gpio-i2c 6 */
@@ -105,6 +122,11 @@ static void __init espresso_gpio_i2c_init(void)
 		omap_muxtbl_get_gpio_by_name("ADC_I2C_SDA_1.8V");
 	espresso_gpio_i2c6_pdata.scl_pin =
 		omap_muxtbl_get_gpio_by_name("ADC_I2C_SCL_1.8V");
+	/* gpio-i2c 8 */
+	espresso_gpio_i2c8_pdata.sda_pin =
+		omap_muxtbl_get_gpio_by_name("MHL_SDA_1.8V");
+	espresso_gpio_i2c8_pdata.scl_pin =
+		omap_muxtbl_get_gpio_by_name("MHL_SCL_1.8V");
 }
 
 enum {
@@ -220,7 +242,7 @@ static struct omap_uart_port_info espresso_uart2_info __initdata = {
 	.rts_mux_driver_control	= 1,
 };
 
-static void __init omap_serial_none_pads_cfg_mux(void)
+static void __init omap_serial_none_pins_cfg_mux(void)
 {
 	int i;
 	struct omap_mux_partition *partition;
@@ -264,6 +286,7 @@ static void __init espresso_uart_init(void)
 
 static struct platform_device *espresso_serial_devices[] __initdata = {
 	&espresso_gpio_i2c6_device,
+	&espresso_gpio_i2c8_device,
 };
 
 void __init omap4_espresso_serial_init(void)
@@ -279,7 +302,7 @@ void __init omap4_espresso_serial_init(void)
 int __init omap4_espresso_serial_late_init(void)
 {
 	if (system_rev > 6 && board_has_modem())
-		omap_serial_none_pads_cfg_mux();
+		omap_serial_none_pins_cfg_mux();
 
 	return 0;
 }

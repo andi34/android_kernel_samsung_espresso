@@ -1,8 +1,8 @@
-/* arch/arm/mach-omap2/board-espresso-jack.c
+/* arch/arm/mach-omap2/board-espresso10-jack.c
  *
  * Copyright (C) 2011 Samsung Electronics Co, Ltd
  *
- * Based on mach-omap2/board-espresso.c
+ * Based on mach-omap2/board-espresso10.c
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -22,7 +22,7 @@
 #include <linux/platform_device.h>
 #include <linux/sec_jack.h>
 
-#include "board-espresso.h"
+#include "board-espresso10.h"
 #include "control.h"
 #include "mux.h"
 #include "omap_muxtbl.h"
@@ -38,44 +38,44 @@ static void sec_jack_set_micbias_state(bool on)
 
 static struct sec_jack_zone sec_jack_zones[] = {
 	{
-		/* adc < 350, unstable zone, default to 3pole if it stays
+		/* adc < 700, unstable zone, default to 3pole if it stays
 		* in this range for a half second (20ms delays, 25 samples)
 		*/
-		.adc_high	= 350,
+		.adc_high	= 700,
 		.delay_ms	= 20,
 		.check_count	= 25,
 		.jack_type	= SEC_HEADSET_3POLE,
 	},
 	{
-		/* 350 < adc <= 759, unstable zone,
+		/* 700 < adc <= 1019, unstable zone,
 		* default to 3pole if it stays
 		* in this range for a second (10ms delays, 100 samples)
 		*/
-		.adc_high	= 759,
+		.adc_high	= 1019,
 		.delay_ms	= 10,
 		.check_count	= 25,
 		.jack_type	= SEC_HEADSET_3POLE,
 	},
 	{
-		/* 759 < adc <= 950, unstable zone, default to 4pole if it
+		/* 1019 < adc <= 2000, unstable zone, default to 4pole if it
 		* stays in this range for a second (10ms delays, 100 samples)
 		*/
-		.adc_high	= 950,
+		.adc_high	= 2000,
 		.delay_ms	= 10,
 		.check_count	= 25,
 		.jack_type	= SEC_HEADSET_4POLE,
 	},
 	{
-		/* 950 < adc <= 2100, 4 pole zone, default to 4pole if it
-		* stays in this range for 200ms (20ms delays, 10 samples)
+		/* 2000 < adc <= 2800, 4 pole zone, default to 4pole if it
+		* stays in this range for 200ms (10ms delays, 10 samples)
 		*/
-		.adc_high	= 2100,
-		.delay_ms	= 20,
+		.adc_high	= 2800,
+		.delay_ms	= 10,
 		.check_count	= 10,
 		.jack_type	= SEC_HEADSET_4POLE,
 	},
 	{
-		/* adc > 2100, unstable zone, default to 3pole if it stays
+		/* adc > 2800, unstable zone, default to 3pole if it stays
 		* in this range for a second (10ms delays, 100 samples)
 		*/
 		.adc_high	= 0x7fffffff,
@@ -88,22 +88,22 @@ static struct sec_jack_zone sec_jack_zones[] = {
 /* To support 3-buttons earjack */
 static struct sec_jack_buttons_zone sec_jack_buttons_zones[] = {
 	{
-		/* 0 <= adc <= 108, stable zone */
+		/* 0 <= adc <= 144, stable zone */
 		.code		= KEY_MEDIA,
 		.adc_low	= 0,
-		.adc_high	= 108,
+		.adc_high	= 144,
 	},
 	{
-		/* 109 <= adc <= 250, stable zone */
+		/* 145 <= adc <= 334, stable zone */
 		.code		= KEY_VOLUMEUP,
-		.adc_low	= 109,
-		.adc_high	= 250,
+		.adc_low	= 145,
+		.adc_high	= 334,
 	},
 	{
-		/* 251 <= adc <= 530, stable zone */
+		/* 335 <= adc <= 705, stable zone */
 		.code		= KEY_VOLUMEDOWN,
-		.adc_low	= 251,
-		.adc_high	= 530,
+		.adc_low	= 335,
+		.adc_high	= 705,
 	},
 };
 
@@ -122,7 +122,7 @@ struct sec_jack_platform_data sec_jack_pdata = {
 	.buttons_zones		= sec_jack_buttons_zones,
 	.num_buttons_zones	= ARRAY_SIZE(sec_jack_buttons_zones),
 #ifdef CONFIG_JACK_RESELECTOR_SUPPORT
-	.ear_reselector_zone    = 1960,
+	.ear_reselector_zone    = 2600,
 #endif
 };
 
