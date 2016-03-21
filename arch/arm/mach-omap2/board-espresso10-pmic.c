@@ -189,7 +189,7 @@ static struct regulator_init_data espresso_vaux3 = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem		= {
+		.state_mem = {
 			.disabled = true,
 		},
 	},
@@ -216,7 +216,7 @@ static struct regulator_init_data espresso_vmmc = {
 
 static struct fixed_voltage_config espresso_vmmc_config = {
 	.supply_name		= "vmmc",
-	.microvolts		= 2800000,
+	.microvolts		= 2800000, /* 2.8V */
 	.startup_delay		= 0,
 	.enable_high		= 1,
 	.enabled_at_boot	= 0,
@@ -241,8 +241,8 @@ static struct regulator_init_data espresso_vpp = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem		= {
-			.disabled	= true,
+		.state_mem = {
+			.disabled = true,
 		},
 	},
 };
@@ -287,7 +287,7 @@ static struct regulator_init_data espresso_vcxio = {
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
-		.state_mem		= {
+		.state_mem = {
 			.disabled = true,
 		},
 	},
@@ -327,7 +327,7 @@ static struct regulator_init_data espresso_vusb = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem		= {
+		.state_mem = {
 			.disabled = true,
 		},
 	},
@@ -375,7 +375,7 @@ static struct regulator_init_data espresso_v2v1 = {
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
 		.state_mem = {
-			.disabled	= true,
+			.disabled = true,
 		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_v2v1_supply),
@@ -433,9 +433,9 @@ static void espresso_twl6030_init(void)
 		pr_err("%s:disable charger interrupt fail!\n", __func__);
 
 	/* espresso use only preq1 of twl6032 */
-	val = ~(DEV_GRP_P1) << TWL6030_PHEONIX_MSK_TRANS_SHIFT;
-	ret = twl_i2c_write_u8(TWL6030_MODULE_ID0, val,
-					TWL6030_PHOENIX_MSK_TRANSITION);
+	ret = twl_i2c_write_u8(TWL6030_MODULE_ID0,
+			~(DEV_GRP_P1) << TWL6030_PHEONIX_MSK_TRANS_SHIFT,
+			TWL6030_PHOENIX_MSK_TRANSITION);
 	if (ret)
 		pr_err("%s:PHOENIX_MSK_TRANSITION write fail!\n", __func__);
 
@@ -448,7 +448,7 @@ static void espresso_twl6030_init(void)
 	ret = twl_i2c_write_u8(TWL6030_MODULE_ID0, val,
 					TWL6030_BBSPOR_CFG);
 	if (ret)
-		pr_err("%s: BBSPOR_CFG write fail!\n", __func__);
+		pr_err("%s: TWL6030 BBSPOR_CFG write fail!\n", __func__);
 
 
 	if (system_rev >= 8) {
@@ -460,7 +460,7 @@ static void espresso_twl6030_init(void)
 		 * disable internal pull-down when vpp_cust is turned off
 		 */
 		val &= ~(1<<1); /*LDO7*/
-		ret |= twl_i2c_write_u8(TWL6030_MODULE_ID0,
+		ret = twl_i2c_write_u8(TWL6030_MODULE_ID0,
 				val, TWL6030_CFG_LDO_PD2);
 		if (ret)
 			pr_err("%s:TWL6030 CFG_LDO_PD2 write fail!\n",
@@ -506,30 +506,30 @@ static struct twl4030_platform_data espresso_twl6030_pdata = {
 
 static struct regulator_init_data espresso_ldo2_nc = {
 	.constraints = {
-		.min_uV = 1000000,
-		.max_uV = 3300000,
-		.apply_uV = true,
+		.min_uV			= 1000000,
+		.max_uV			= 3300000,
+		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem		= {
-			.disabled	= true,
+		.state_mem = {
+			.disabled = true,
 		},
 	},
 };
 
-static struct regulator_consumer_supply espresso_vdd_io_1V8_supplies[] = {
+static struct regulator_consumer_supply espresso_ldo5_supplies[] = {
 	REGULATOR_SUPPLY("VDD_IO_1.8V", NULL),
 	REGULATOR_SUPPLY("SENSOR_1.8V", "4-0018"),
 };
 
 static struct regulator_init_data espresso_ldo5 = {
 	.constraints = {
-		.min_uV = 1800000,
-		.max_uV = 1800000,
-		.apply_uV = true,
+		.min_uV			= 1800000,
+		.max_uV			= 1800000,
+		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
@@ -537,38 +537,38 @@ static struct regulator_init_data espresso_ldo5 = {
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_vdd_io_1V8_supplies),
-	.consumer_supplies	= espresso_vdd_io_1V8_supplies,
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_ldo5_supplies),
+	.consumer_supplies	= espresso_ldo5_supplies,
 };
 
 static struct regulator_init_data espresso_ldo7_nc = {
 	.constraints = {
-		.min_uV = 1000000,
-		.max_uV = 3300000,
-		.apply_uV = true,
+		.min_uV			= 1000000,
+		.max_uV			= 3300000,
+		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem		= {
-			.disabled	= true,
+		.state_mem = {
+			.disabled = true,
 		},
 	},
 };
 
 static struct regulator_init_data espresso_ldoln_nc = {
 	.constraints = {
-		.min_uV = 1000000,
-		.max_uV = 3300000,
-		.apply_uV = true,
+		.min_uV			= 1000000,
+		.max_uV			= 3300000,
+		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem		= {
-			.disabled	= true,
+		.state_mem = {
+			.disabled = true,
 		},
 	},
 };
@@ -601,7 +601,6 @@ static struct twl4030_platform_data espresso_twl6032_pdata_rev02 = {
 #endif
 	.madc		= &espresso_madc,
 };
-
 
 struct twl4030_rtc_data espresso_rtc = {
 	.auto_comp = 1,
@@ -644,8 +643,7 @@ static struct platform_device *espresso_pmic_devices[] __initdata = {
 	&espresso_madc_device,
 };
 
-static struct i2c_board_info
-		espresso_twl6030_i2c1_board_info[] __initdata = {
+static struct i2c_board_info espresso_twl6030_i2c1_board_info[] __initdata = {
 	{
 		I2C_BOARD_INFO("twl6030", 0x48),
 		.flags		= I2C_CLIENT_WAKE,
@@ -660,8 +658,7 @@ static struct i2c_board_info
 #endif
 };
 
-static struct i2c_board_info
-		espresso_twl6032_i2c1_board_info_rev02[] __initdata = {
+static struct i2c_board_info espresso_twl6032_i2c1_board_info_rev02[] __initdata = {
 	{
 		I2C_BOARD_INFO("twl6025", 0x48),
 		.flags		= I2C_CLIENT_WAKE,
@@ -676,8 +673,7 @@ static struct i2c_board_info
 #endif
 };
 
-static struct i2c_board_info
-		espresso_twl6032_i2c1_board_info_rev03[] __initdata = {
+static struct i2c_board_info espresso_twl6032_i2c1_board_info_rev03[] __initdata = {
 	{
 		I2C_BOARD_INFO("twl6032", 0x48),
 		.flags		= I2C_CLIENT_WAKE,
