@@ -33,21 +33,21 @@
 #define YAS_FULL_OFFSET {0, 0, 0}
 
 enum {
-	GPIO_ALS_INT = 0,
-	GPIO_PS_VOUT,
-	GPIO_MSENSE_IRQ,
+	NUM_ALS_INT = 0,
+	NUM_PS_VOUT,
+	NUM_MSENSE_IRQ,
 };
 
 struct gpio sensors_gpios[] = {
-	[GPIO_ALS_INT] = {
+	[NUM_ALS_INT] = {
 		.flags = GPIOF_IN,
 		.label = "ALS_INT_18",
 	},
-	[GPIO_PS_VOUT] = {
+	[NUM_PS_VOUT] = {
 		.flags = GPIOF_IN,
 		.label = "PS_VOUT",
 	},
-	[GPIO_MSENSE_IRQ] = {
+	[NUM_MSENSE_IRQ] = {
 		.flags = GPIOF_IN,
 		.label = "MSENSE_IRQ",
 	},
@@ -58,18 +58,18 @@ static int bh1721fvc_light_sensor_reset(void)
 
 	printk(KERN_INFO " bh1721_light_sensor_reset !!\n");
 
-	omap_mux_init_gpio(sensors_gpios[GPIO_ALS_INT].gpio,
+	omap_mux_init_gpio(sensors_gpios[NUM_ALS_INT].gpio,
 		OMAP_PIN_OUTPUT);
 
-	gpio_free(sensors_gpios[GPIO_ALS_INT].gpio);
+	gpio_free(sensors_gpios[NUM_ALS_INT].gpio);
 
-	gpio_request(sensors_gpios[GPIO_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
+	gpio_request(sensors_gpios[NUM_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
 
-	gpio_direction_output(sensors_gpios[GPIO_ALS_INT].gpio, 0);
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 0);
 
 	udelay(2);
 
-	gpio_direction_output(sensors_gpios[GPIO_ALS_INT].gpio, 1);
+	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 1);
 
 	return 0;
 
@@ -161,14 +161,14 @@ void __init omap4_espresso_sensors_init(void)
 
 	gpio_request_array(sensors_gpios, ARRAY_SIZE(sensors_gpios));
 
-	omap_mux_init_gpio(sensors_gpios[GPIO_MSENSE_IRQ].gpio,
+	omap_mux_init_gpio(sensors_gpios[NUM_MSENSE_IRQ].gpio,
 		OMAP_PIN_OUTPUT);
 
-	gpio_free(sensors_gpios[GPIO_MSENSE_IRQ].gpio);
+	gpio_free(sensors_gpios[NUM_MSENSE_IRQ].gpio);
 
-	gpio_request(sensors_gpios[GPIO_MSENSE_IRQ].gpio, "MSENSE_IRQ");
+	gpio_request(sensors_gpios[NUM_MSENSE_IRQ].gpio, "MSENSE_IRQ");
 
-	gpio_direction_output(sensors_gpios[GPIO_MSENSE_IRQ].gpio, 1);
+	gpio_direction_output(sensors_gpios[NUM_MSENSE_IRQ].gpio, 1);
 
 	i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo,
 				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo));
