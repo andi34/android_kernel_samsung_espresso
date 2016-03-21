@@ -39,6 +39,11 @@
 #define TWL_CONTROLLER_RSVD		(1 << 5)
 
 #define TWL6030_PHEONIX_MSK_TRANS_SHIFT	0x05
+
+#define TWL_BBSPOR_CFG_VRTC_PWEN	(1 << 4)
+#define TWL_BBSPOR_CFG_VRTC_EN_OFF_STS	(1 << 5)
+#define TWL_BBSPOR_CFG_VRTC_EN_SLP_STS	(1 << 6)
+
 #define TWL6030_CFG_LDO_PD2	0xF5
 
 static bool enable_sr = true;
@@ -496,14 +501,24 @@ static void espresso_twl6030_init(void)
 	if (ret)
 		pr_err("%s:PHOENIX_MSK_TRANSITION write fail!\n", __func__);
 
-	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0,
-			&val, TWL6030_BBSPOR_CFG);
+	if (board_is_espresso10()) {
+	/*
+	 * Enable charge backup battery and set charging voltage to 2.6V.
+	 * Set VRTC low power mode in off/sleep and standard power mode in on.
+	 */
+		val = TWL_BBSPOR_CFG_VRTC_EN_SLP_STS | TWL_BBSPOR_CFG_VRTC_EN_OFF_STS |
+			TWL_BBSPOR_CFG_VRTC_PWEN;
+	} else {
 
-	/*disable backkup battery charge*/
-	val &= ~(1<<3);
+		ret = twl_i2c_read_u8(TWL6030_MODULE_ID0,
+				&val, TWL6030_BBSPOR_CFG);
 
-	/*configure in low power mode*/
-	val |= (1<<6 | 1<<5);
+		/* disable backup battery charge */
+		val &= ~(1<<3);
+
+		/* configure in low power mode */
+		val |= (1<<6 | 1<<5);
+	}
 
 	ret |= twl_i2c_write_u8(TWL6030_MODULE_ID0,
 			val, TWL6030_BBSPOR_CFG);
@@ -511,7 +526,7 @@ static void espresso_twl6030_init(void)
 		pr_err("%s: TWL6030 BBSPOR_CFG write fail!\n", __func__);
 
 
-	if (system_rev >= 9) {
+	if (system_rev >= 8 && board_is_espresso10() || system_rev >= 9 && !board_is_espresso10()) {
 		ret = twl_i2c_read_u8(TWL6030_MODULE_ID0,
 				&val, TWL6030_CFG_LDO_PD2);
 
@@ -851,37 +866,100 @@ void __init omap4_espresso_pmic_init(void)
 	platform_add_devices(espresso_pmic_devices,
 			     ARRAY_SIZE(espresso_pmic_devices));
 
+	if (!board_is_espresso10()) {
+		if (system_rev < 7)
+			espresso_vaux2.constraints.always_on = true;
 
-	if (system_rev < 7)
+		if (system_rev >= 6) {
+			espresso_power_data.resource_config =
+				espresso_rconfig;
+
+			if (system_rev >= 7)
+				espresso_twl6032_pdata.ldo5 = &espresso_vdd_io_1V8;
+
+			i2c_register_board_info(1, espresso_twl6032_i2c1_board_info,
+					ARRAY_SIZE(espresso_twl6032_i2c1_board_info));
+		} else {
+			i2c_register_board_info(1, espresso_twl6030_i2c1_board_info,
+					ARRAY_SIZE(espresso_twl6030_i2c1_board_info));
+		}
+
+		espresso_vdac.num_consumer_supplies = 0;
+
+		if (system_rev >= 7) {
+
+			espresso_vmmc.constraints.state_mem.disabled = false;
+			espresso_vmmc.constraints.state_mem.enabled = false;
+
+			espresso_vmmc_config.gpio =
+			omap_muxtbl_get_gpio_by_name("TF_EN");
+			platform_device_register(&espresso_vmmc_device);
+		}
+	} else {
+		/*
+		 * PMIC is change from twl6030 to twl6032 from rev0.2.
+		 * Espresso10 rev0.2 board have 5 as system_rev.
+		 * ldo4 is used for VAP_IO_2.8V and ldo is nc from rev0.3
+		 * Espresso10 rev0.3 board have 6 as system_rev.
+		 */
+		if (system_rev >= 6)
+			i2c_register_board_info(1,
+				espresso_twl6032_i2c1_board_info_rev03,
+				ARRAY_SIZE(espresso_twl6032_i2c1_board_info_rev03));
+		else if (system_rev == 5)
+			i2c_register_board_info(1,
+				espresso_twl6032_i2c1_board_info_rev02,
+				ARRAY_SIZE(espresso_twl6032_i2c1_board_info_rev02));
+		else
+			i2c_register_board_info(1,
+				espresso_twl6030_i2c1_board_info,
+				ARRAY_SIZE(espresso_twl6030_i2c1_board_info));
+
+		espresso_vaux1.constraints.state_mem.enabled = false;
+		espresso_vaux1.num_consumer_supplies = 0;
+
+		espresso_vaux2.num_consumer_supplies = 2;
 		espresso_vaux2.constraints.always_on = true;
 
-	if (system_rev >= 6) {
-
-		espresso_power_data.resource_config =
-			espresso_rconfig;
-
-		if (system_rev >= 7)
-			espresso_twl6032_pdata.ldo5 = &espresso_vdd_io_1V8;
-
-		i2c_register_board_info(1, espresso_twl6032_i2c1_board_info,
-				ARRAY_SIZE(espresso_twl6032_i2c1_board_info));
-	} else {
-		i2c_register_board_info(1, espresso_twl6030_i2c1_board_info,
-				ARRAY_SIZE(espresso_twl6030_i2c1_board_info));
-	}
-
-	espresso_vdac.num_consumer_supplies = 0;
-
-	if (system_rev >= 7) {
-
 		espresso_vmmc.constraints.state_mem.disabled = false;
-		espresso_vmmc.constraints.state_mem.enabled = false;
+		espresso_vmmc.num_consumer_supplies = 1;
 
-		espresso_vmmc_config.gpio =
-		omap_muxtbl_get_gpio_by_name("TF_EN");
-		platform_device_register(&espresso_vmmc_device);
+		espresso_vpp.num_consumer_supplies = 0;
+
+		espresso_vusim.constraints.state_mem.enabled = false;
+		espresso_vusim.num_consumer_supplies = 0;
+
+		espresso_vana.constraints.state_mem.enabled = false;
+		espresso_vana.num_consumer_supplies = 0;
+
+		espresso_vdac.constraints.state_mem.disabled = false;
+
+		espresso_vusb_supply[1].dev_name = NULL;
+
+		espresso_clk32kaudio.num_consumer_supplies = 0;
+		espresso_clk32kg.num_consumer_supplies = 0;
+
+		espresso_vmem.constraints.state_mem.enabled = false;
+		espresso_vmem.num_consumer_supplies =0;
+
+		/*
+		 * Use external ldo for tflash from rev0.3
+		 * Register fixed regulator to control ldo which is used by tflash.
+		 */
+		if (system_rev >= 6) {
+			espresso_vmmc_config.gpio =
+			omap_muxtbl_get_gpio_by_name("TF_EN");
+			platform_device_register(&espresso_vmmc_device);
+		}
+
+		/*
+		 * only best buy Wi-Fi verstion support MHL from rev0.4
+		 * Set lodln regulator as VDAC regulator which is used by MHL.
+		 */
+		if (board_is_bestbuy_variant() && system_rev >= 7)
+			espresso_twl6032_pdata_rev03.ldoln = &espresso_vdac;
+
 	}
-
 
 	/*
 	 * Drive MSECURE high for TWL6030 write access.
