@@ -158,13 +158,18 @@ static struct regulator_init_data espresso_vaux1 = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.always_on		= true,
+		.state_mem = {
+			.enabled = true,
+		},
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_vaux1_supplies),
+	.consumer_supplies	= espresso_vaux1_supplies,
 };
 
 static struct regulator_consumer_supply espresso_vaux2_supplies[] = {
 	REGULATOR_SUPPLY("VAP_IO_2.8V", NULL),
 	REGULATOR_SUPPLY("SENSOR_2.8V", "4-0018"),
+	REGULATOR_SUPPLY("SENSOR_2.8V", "4-0044"),
 };
 
 static struct regulator_init_data espresso_vaux2 = {
@@ -177,7 +182,6 @@ static struct regulator_init_data espresso_vaux2 = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.always_on		= true,
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vaux2_supplies),
 	.consumer_supplies	= espresso_vaux2_supplies,
@@ -201,6 +205,7 @@ static struct regulator_init_data espresso_vaux3 = {
 
 static struct regulator_consumer_supply espresso_vmmc_supply[] = {
 	REGULATOR_SUPPLY("vmmc", "omap_hsmmc.0"),
+	REGULATOR_SUPPLY("VSD_2.8V", NULL),
 };
 
 static struct regulator_init_data espresso_vmmc = {
@@ -213,6 +218,9 @@ static struct regulator_init_data espresso_vmmc = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.state_mem = {
+			.disabled = true,
+		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vmmc_supply),
 	.consumer_supplies	= espresso_vmmc_supply,
@@ -253,6 +261,8 @@ static struct regulator_init_data espresso_vpp = {
 			.disabled = true,
 		},
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_vpp_supply),
+	.consumer_supplies	= espresso_vpp_supply,
 };
 
 static struct regulator_consumer_supply espresso_vusim_supply[] = {
@@ -268,8 +278,13 @@ static struct regulator_init_data espresso_vusim = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.state_mem = {
+			.enabled = true,
+		},
 		.always_on		= true,
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_vusim_supply),
+	.consumer_supplies	= espresso_vusim_supply,
 };
 
 static struct regulator_consumer_supply espresso_vana_supply[] = {
@@ -285,7 +300,12 @@ static struct regulator_init_data espresso_vana = {
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
+		.state_mem = {
+			.enabled = true,
+		},
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_vana_supply),
+	.consumer_supplies	= espresso_vana_supply,
 };
 
 static struct regulator_consumer_supply espresso_vcxio_supply[] = {
@@ -325,6 +345,9 @@ static struct regulator_init_data espresso_vdac = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.state_mem = {
+			.disabled = true,
+		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vdac_supply),
 	.consumer_supplies	= espresso_vdac_supply,
@@ -332,7 +355,7 @@ static struct regulator_init_data espresso_vdac = {
 
 static struct regulator_consumer_supply espresso_vusb_supply[] = {
 	REGULATOR_SUPPLY("VUSB_3.3V", NULL),
-	REGULATOR_SUPPLY("vusb", NULL),
+	REGULATOR_SUPPLY("vusb", "espresso_otg"),
 };
 
 static struct regulator_init_data espresso_vusb = {
@@ -360,6 +383,8 @@ static struct regulator_init_data espresso_clk32kg = {
 		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_clk32kg_supply),
+	.consumer_supplies	= espresso_clk32kg_supply,
 };
 
 static struct regulator_consumer_supply espresso_clk32kaudio_supply[] = {
@@ -373,6 +398,8 @@ static struct regulator_init_data espresso_clk32kaudio = {
 		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_clk32kaudio_supply),
+	.consumer_supplies	= espresso_clk32kaudio_supply,
 };
 
 static struct regulator_consumer_supply espresso_vmem_supply[] = {
@@ -388,7 +415,12 @@ static struct regulator_init_data espresso_vmem = {
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
+		.state_mem = {
+			.enabled = true,
+		},
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_vmem_supply),
+	.consumer_supplies	= espresso_vmem_supply,
 };
 
 static struct regulator_consumer_supply espresso_v2v1_supply[] = {
@@ -840,6 +872,33 @@ void __init omap4_espresso_pmic_init(void)
 		i2c_register_board_info(1,
 			espresso_twl6030_i2c1_board_info,
 			ARRAY_SIZE(espresso_twl6030_i2c1_board_info));
+
+	espresso_vaux1.constraints.state_mem.enabled = false;
+	espresso_vaux1.num_consumer_supplies = 0;
+
+	espresso_vaux2.num_consumer_supplies = 2;
+	espresso_vaux2.constraints.always_on = true;
+
+	espresso_vmmc.constraints.state_mem.disabled = false;
+	espresso_vmmc.num_consumer_supplies = 1;
+
+	espresso_vpp.num_consumer_supplies = 0;
+
+	espresso_vusim.constraints.state_mem.enabled = false;
+	espresso_vusim.num_consumer_supplies = 0;
+
+	espresso_vana.constraints.state_mem.enabled = false;
+	espresso_vana.num_consumer_supplies = 0;
+
+	espresso_vdac.constraints.state_mem.disabled = false;
+
+	espresso_vusb_supply[1].dev_name = NULL;
+
+	espresso_clk32kaudio.num_consumer_supplies = 0;
+	espresso_clk32kg.num_consumer_supplies = 0;
+
+	espresso_vmem.constraints.state_mem.enabled = false;
+	espresso_vmem.num_consumer_supplies =0;
 
 	/*
 	 * Use external ldo for tflash from rev0.3

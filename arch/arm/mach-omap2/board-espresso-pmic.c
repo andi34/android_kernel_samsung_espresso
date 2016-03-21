@@ -199,8 +199,8 @@ static struct regulator_init_data espresso_vaux3 = {
 };
 
 static struct regulator_consumer_supply espresso_vmmc_supply[] = {
-	REGULATOR_SUPPLY("VSD_2.8V", NULL),
 	REGULATOR_SUPPLY("vmmc", "omap_hsmmc.0"),
+	REGULATOR_SUPPLY("VSD_2.8V", NULL),
 };
 
 static struct regulator_init_data espresso_vmmc = {
@@ -344,6 +344,8 @@ static struct regulator_init_data espresso_vdac = {
 			.disabled = true,
 		},
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(espresso_vdac_supply),
+	.consumer_supplies	= espresso_vdac_supply,
 };
 
 static struct regulator_consumer_supply espresso_vusb_supply[] = {
@@ -867,6 +869,8 @@ void __init omap4_espresso_pmic_init(void)
 		i2c_register_board_info(1, espresso_twl6030_i2c1_board_info,
 				ARRAY_SIZE(espresso_twl6030_i2c1_board_info));
 	}
+
+	espresso_vdac.num_consumer_supplies = 0;
 
 	if (system_rev >= 7) {
 
