@@ -357,13 +357,6 @@ static void espresso_set_dvfs(bool on)
 
 void __init omap4_espresso_input_init(void)
 {
-	if (!board_has_modem() && !board_is_bestbuy_variant())
-		espresso_ts_pdata.model_name = "P3110";
-	else if (board_is_bestbuy_variant())
-		espresso_ts_pdata.model_name = "P3113";
-	else
-		espresso_ts_pdata.model_name = "P3100";
-
 	espresso_gpio_keypad_gpio_init();
 	espresso_tsp_gpio_init();
 	espresso_ts_panel_setup();

@@ -324,13 +324,6 @@ void omap4_espresso_tsp_ta_detect(int cable_type)
 
 void __init omap4_espresso_input_init(void)
 {
-	if (!board_has_modem() && !board_is_bestbuy_variant())
-		espresso_ts_pdata.model_name = "P5110";
-	else if (board_is_bestbuy_variant())
-		espresso_ts_pdata.model_name = "P5113";
-	else
-		espresso_ts_pdata.model_name = "P5100";
-
 	if (system_rev >= 7)
 		espresso_ts_panel_setup();
 	espresso_gpio_keypad_gpio_init();
